@@ -1,10 +1,11 @@
 from biblioteca import Biblioteca
-from colorama import init, Fore, Back, Style 
-init(autoreset = True)  # Inicializa colorama y asegura que los estilos se reinicien automáticamente después de cada impresión
+from estilo import ConsoleFormatter
+
 # Clase Menu: Representa el menú de interacción con el usuario.
 class Menu:
     def __init__(self):
         self.biblioteca = Biblioteca()  # Se crea un objeto Biblioteca.
+        self.estilo = ConsoleFormatter()
 
     # Método para mostrar el menú y manejar las opciones del usuario.
     def mostrar_menu(self):
@@ -40,8 +41,8 @@ class Menu:
                 self.biblioteca.buscar_libro(isbn)
 
             elif opcion == "6":  # Salir del programa.
-                print("Saliendo del programa...")
+                self.estilo.success("Saliendo del programa...")
                 break  # Salimos del bucle y terminamos el programa.
 
             else:  # Opción inválida.
-                print(f"{Fore.RED} Opción inválida. Intenta de nuevo.")
+                self.estilo.error("Opción inválida. Intenta de nuevo.")

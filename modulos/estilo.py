@@ -2,7 +2,6 @@ from colorama import init, Fore, Back, Style
 
 init(autoreset=True)  # Buenas prácticas: inicializar una vez al comienzo
 
-
 class ConsoleFormatter:
     def __init__(self):
         self.fore = Fore
@@ -20,6 +19,9 @@ class ConsoleFormatter:
 
     def success(self, message):
         print(self.fore.GREEN + message)
+
+    def presentacion(self, message):
+        print(self.fore.MAGENTA + message)
 
     def custom(self, message, color=Fore.WHITE, bg=Back.BLACK, bold=False):
         style = self.style.BRIGHT if bold else self.style.NORMAL
