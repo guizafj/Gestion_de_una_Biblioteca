@@ -18,9 +18,9 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 
 ## ✅ Estado actual del proyecto
 
-⚠️ En construcción - Fase inicial
+  ⚠️ En construcción - Fase inicial
 
-  Estoy comenzando la creación de la estructura base del proyecto y las primeras funcionalidades.
+    Estoy comenzando la creación de la estructura base del proyecto y las primeras funcionalidades.
 
 ## 🎯 Objetivo general
 
