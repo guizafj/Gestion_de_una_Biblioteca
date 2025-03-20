@@ -1,16 +1,18 @@
 from libro import Libro
+from estilo import ConsoleFormatter
 from colorama import init, Fore, Back, Style 
 init(autoreset = True)  # Inicializa colorama y asegura que los estilos se reinicien automáticamente después de cada impresión
 # Clase Biblioteca: Representa la biblioteca y gestiona los libros.
 class Biblioteca:
     def __init__(self):
         self.libros = []  # Atributo: Lista de libros en la biblioteca.
+        self.formato = ConsoleFormatter()
 
     # Método para agregar un nuevo libro a la biblioteca.
     def agregar_libro(self, s_titulo, s_autor, s_isbn):
         libro = Libro(s_titulo, s_autor, s_isbn)  # Se crea un nuevo objeto Libro.
         self.libros.append(libro)  # Se añade a la lista de libros.
-        print(f"{Fore.GREEN}Libro '{s_titulo}' agregado con éxito.")
+        self.formato.success(f"Libro '{s_titulo}' agregado con éxito.")
 
     # Método para prestar un libro por su ISBN.
     def prestar_libro(self, s_isbn):
