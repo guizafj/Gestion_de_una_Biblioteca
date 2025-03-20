@@ -16,6 +16,21 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 - **Docker** (para desarrollo y despliegue en contenedores)
 - **Visual Studio Code** (entorno de desarrollo)
 
+## ✅ Estado actual del proyecto
+
+⚠️ En construcción - Fase inicial
+
+  Estoy comenzando la creación de la estructura base del proyecto y las primeras funcionalidades.
+
+## 🎯 Objetivo general
+
+  Desarrollar un sistema simple, modular y eficiente que facilite la administración de bibliotecas pequeñas o medianas, aplicando buenas prácticas de programación.
+  Diseñar un sistema extensible y adaptable a diferentes tipos de bibliotecas.
+
+## 🤝 Contribuciones
+
+  Como el proyecto está en sus primeras etapas, cualquier sugerencia o feedback es bienvenido. En el futuro estaré abierto a colaboraciones externas.
+
 ## 📦 Estructura del proyecto (en progreso)
 
 ```plaintext
@@ -28,3 +43,4 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 ├── requirements.txt
 ├── Dockerfile
 ├── README.md
+
