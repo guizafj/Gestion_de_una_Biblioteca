@@ -32,7 +32,7 @@ class Biblioteca:
     # Método para mostrar todos los libros en la biblioteca.
     def mostrar_libros(self):
         if not self.libros:  # Si no hay libros en la biblioteca...
-            self.estilo.info ("No hay libros en la biblioteca.")
+            self.estilo.info("No hay libros en la biblioteca.")
         else:  # Si hay libros...
             for libro in self.libros:  # Recorremos la lista de libros.
                 libro.mostrar()  # Mostramos la información de cada libro, llamando al metodo declarado en la clase Libro
