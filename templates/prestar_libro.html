@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Prestar Libro</h2>
+    <p>¿Deseas prestar el libro "{{ libro.titulo }}"?</p>
+    <form method="POST">
+        <button type="submit">Confirmar Préstamo</button>
+        <a href="{{ url_for('index') }}">Cancelar</a>
+    </form>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Mi Historial de Préstamos</h2>
+    <ul>
+        {% for prestamo in prestamos %}
+            <li>
+                {{ prestamo.libro.titulo }} - 
+                {{ 'Devuelto' if prestamo.fecha_devolucion else 'Pendiente' }}
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Volver al Inicio</a>
+{% endblock %}

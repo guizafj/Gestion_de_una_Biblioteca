@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Resultados de la Búsqueda</h2>
+    <p>Término buscado: "{{ query }}"</p>
+    <ul>
+        {% for libro in libros %}
+            <li>{{ libro.titulo }} - {{ libro.autor }} ({{ 'Disponible' if libro.disponible else 'Prestado' }})</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Volver al Inicio</a>
+{% endblock %}

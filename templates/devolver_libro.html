@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Devolver Libro</h2>
+    <p>¿Deseas devolver el libro "{{ libro.titulo }}"?</p>
+    <form method="POST">
+        <button type="submit">Confirmar Devolución</button>
+        <a href="{{ url_for('index') }}">Cancelar</a>
+    </form>
+{% endblock %}

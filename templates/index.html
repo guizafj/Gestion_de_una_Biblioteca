@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Lista de Libros</h2>
+    <ul>
+        {% for libro in libros %}
+            <li>{{ libro.titulo }} - {{ libro.autor }} ({{ 'Disponible' if libro.disponible else 'Prestado' }})</li>
+        {% endfor %}
+    </ul>
+    {% if current_user.is_authenticated and current_user.es_bibliotecario %}
+        <a href="{{ url_for('agregar_libro') }}">Agregar Libro</a>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Editar Rol de Usuario</h2>
+    <form method="POST">
+        <label for="rol">Rol:</label>
+        <select name="rol">
+            <option value="usuario" {% if usuario.rol == 'usuario' %}selected{% endif %}>Usuario</option>
+            <option value="bibliotecario" {% if usuario.rol == 'bibliotecario' %}selected{% endif %}>Bibliotecario</option>
+        </select><br>
+
+        <button type="submit">Guardar Cambios</button>
+        <a href="{{ url_for('index') }}">Cancelar</a>
+    </form>
+{% endblock %}

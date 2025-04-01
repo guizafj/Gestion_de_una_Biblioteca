@@ -13,7 +13,7 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 
 - **Python** (backend)
 - **SQLite** o **PostgreSQL** (base de datos)
-- **Docker** (para desarrollo y despliegue en contenedores)
+- **Flask** (para desarrollo y despliegue en servidores)
 - **Visual Studio Code** (entorno de desarrollo)
 
 ## ✅ Estado actual del proyecto
@@ -34,13 +34,24 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 ## 📦 Estructura del proyecto (en progreso)
 
 ```plaintext
-/mi-proyecto-biblioteca
-├── src/
-│   ├── models/
-│   ├── controllers/
-│   ├── views/ (si es necesario para interfaz)
-├── tests/
-├── requirements.txt
-├── Dockerfile
-├── README.md
-
+biblioteca_flask/
+├── app.py                  # Archivo principal de la aplicación
+├── modules/                # Carpeta para módulos independientes
+│   ├── models.py           # Definición de modelos (libros, usuarios)
+│   ├── forms.py            # Formularios usando Flask-WTF
+│   ├── routes.py           # Rutas y lógica de negocio
+│   └── auth.py             # Lógica de autenticación
+├── templates/              # Archivos HTML
+│   ├── base.html           # Plantilla base
+│   ├── index.html          # Página principal
+│   ├── agregar_libro.html  # Formulario para agregar libros
+│   ├── buscar_libro.html   # Página de búsqueda
+│   ├── login.html          # Página de inicio de sesión
+│   └── registro.html       # Página de registro de usuarios
+├── static/                 # Archivos estáticos (CSS, JS, imágenes)
+│   ├── css/
+│   │   └── styles.css      # Hoja de estilos CSS
+│   └── js/
+│       └── scripts.js      # Archivo JavaScript
+├── requirements.txt        # Dependencias del proyecto
+└── README.md               # Documentación del proyecto

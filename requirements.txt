@@ -1,0 +1,5 @@
+Flask==2.3.2               # Framework web ligero
+Flask-SQLAlchemy==3.0.5    # Integración de SQLAlchemy con Flask
+Flask-WTF==1.1.1           # Para crear formularios seguros
+Flask-Login==0.6.2         # Manejo de autenticación de usuarios
+WTForms==3.0.1             # Creación y validación de formularios

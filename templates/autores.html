@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Libros Agrupados por Autor</h2>
+    {% for autor, libros in data %}
+        <h3>{{ autor }}</h3>
+        <ul>
+            {% for libro in libros %}
+                <li>{{ libro.titulo }} ({{ 'Disponible' if libro.disponible else 'Prestado' }})</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+    <a href="{{ url_for('index') }}">Volver al Inicio</a>
+{% endblock %}

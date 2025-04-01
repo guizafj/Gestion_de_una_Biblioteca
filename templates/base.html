@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Gestión de Biblioteca</h1>
+        <nav>
+            <a href="{{ url_for('index') }}">Inicio</a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                {% if current_user.es_bibliotecario() %}
+                    <a href="{{ url_for('agregar_libro') }}">Agregar Libro</a>
+                    <a href="{{ url_for('editar_libro_lista') }}">Editar Libros</a>
+                    <a href="{{ url_for('eliminar_libro_lista') }}">Eliminar Libros</a>
+                    <a href="{{ url_for('editar_rol') }}">Gestionar Roles</a>
+            {% endif %}    
+            {% else %}
+                <a href="{{ url_for('login') }}">Iniciar Sesión</a>
+                <a href="{{ url_for('registro') }}">Registrarse</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

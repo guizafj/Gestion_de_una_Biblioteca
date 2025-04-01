@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Recordatorios de Devolución Pendiente</h2>
+    <ul>
+        {% for prestamo in prestamos_pendientes %}
+            <li>{{ prestamo.libro.titulo }} (Préstamo desde {{ prestamo.fecha_prestamo.strftime('%d/%m/%Y') }})</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Volver al Inicio</a>
+{% endblock %}
