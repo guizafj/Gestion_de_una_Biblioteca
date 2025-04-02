@@ -1,8 +1,7 @@
 from flask import Flask  # Importamos Flask para crear la aplicación
-from flask_sqlalchemy import SQLAlchemy  # Para trabajar con la base de datos
-from flask_wtf.csrf import CSRFProtect  # Protección contra ataques CSRF
+# from flask_sqlalchemy import SQLAlchemy  # Para trabajar con la base de datos
 from flask_login import LoginManager  # Manejo de sesiones de usuario
-from flask_mail import Mail  # Para enviar correos electrónicos
+# from flask_mail import Mail  # Para enviar correos electrónicos
 
 # Importamos las configuraciones centralizadas
 from config import Config  # Configuraciones desde config.py
@@ -38,7 +37,6 @@ def initialize_extensions(app):
     Inicializa todas las extensiones de Flask.
     """
     db.init_app(app)  # Inicializamos SQLAlchemy
-    csrf = CSRFProtect(app)  # Activamos la protección CSRF
     mail.init_app(app)  # Inicializamos Flask-Mail para el envío de correos
 
     # Configuración de Flask-Login

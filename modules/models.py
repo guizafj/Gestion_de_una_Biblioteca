@@ -1,5 +1,5 @@
-from flask_login import UserMixin
-from datetime import datetime
+from flask_login import UserMixin # Clase para manejar la autenticación de usuarios
+from datetime import datetime, timezone
 import re
 import secrets
 from extensions import db
@@ -130,7 +130,7 @@ class Prestamo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     libro_id = db.Column(db.Integer, db.ForeignKey('libro.id'), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
-    fecha_prestamo = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_prestamo = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     fecha_devolucion = db.Column(db.DateTime, nullable=True)
 
     libro = db.relationship('Libro', backref=db.backref('prestamos', lazy=True))
@@ -146,7 +146,7 @@ class Prestamo(db.Model):
             int: Número de días que el libro ha estado prestado.
         """
         if not self.fecha_devolucion:
-            return (datetime.utcnow() - self.fecha_prestamo).days
+            return (datetime.timezone.utc() - self.fecha_prestamo).days
         return (self.fecha_devolucion - self.fecha_prestamo).days
 
    

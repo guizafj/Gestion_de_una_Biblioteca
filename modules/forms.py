@@ -1,7 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import StringField, PasswordField, SubmitField, ValidationError
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 from wtforms import SelectField
+from models import Usuario
 
 class RegistroForm(FlaskForm):
     """
@@ -13,12 +14,24 @@ class RegistroForm(FlaskForm):
         confirmar_contrasena: Confirmación de contraseña.
         rol: Rol del usuario ('bibliotecario' o 'usuario').
     """
-    nombre = StringField('Nombre', validators=[DataRequired(), Length(min=2, max=100)])
+    nombre = StringField('Nombre', validators=[DataRequired(), Length(min=2, max=50)])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    contrasena = PasswordField('Contraseña', validators=[DataRequired(), Length(min=8)])
-    confirmar_contrasena = PasswordField('Confirmar Contraseña', validators=[DataRequired(), EqualTo('contrasena')])
-    rol = SelectField('Rol', choices=[('usuario', 'Usuario'), ('bibliotecario', 'Bibliotecario')], default='usuario')
+    contrasena = PasswordField('Contraseña', validators=[ 
+        DataRequired(),
+        Length(min=8, message="La contraseña debe tener al menos 8 caracteres.")
+    ])
+    confirmar_contrasena = PasswordField('Confirmar Contraseña', validators=[
+        DataRequired(),
+        EqualTo('contrasena', message="Las contraseñas deben coincidir.")
+    ])
+    rol = SelectField('Rol', choices=[('usuario', 'Usuario'), ('bibliotecario', 'Bibliotecario')], default='usuario', validators=[DataRequired()])
     submit = SubmitField('Registrarse')
+
+    # Validación personalizada para verificar si el email ya existe
+    def validate_email(self, email):
+        usuario = Usuario.query.filter_by(email=email.data).first()
+        if usuario:
+            raise ValidationError('El email ya está registrado. Por favor, usa otro.')
 
 class LoginForm(FlaskForm):
     """

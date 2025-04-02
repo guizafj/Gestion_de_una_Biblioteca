@@ -1,4 +1,3 @@
-from flask_login import UserMixin  # Clase para manejar la autenticación de usuarios
 from modules.models import Usuario  # Importamos el modelo Usuario
 
 def load_user(user_id):
