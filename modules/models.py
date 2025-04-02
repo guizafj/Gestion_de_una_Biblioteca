@@ -1,8 +1,8 @@
-from app import db
 from flask_login import UserMixin
 from datetime import datetime
 import re
 import secrets
+from extensions import db
 
 class Libro(db.Model):
     """
@@ -21,14 +21,28 @@ class Libro(db.Model):
     disponible = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
+        
+        """
+        Proporciona una representación en forma de cadena del objeto Libro.
+
+            str: Una cadena con el formato "<Libro {self.titulo}>", donde `self.titulo`
+            es el título del libro.
+        """
         return f"<Libro {self.titulo}>"
 
     @staticmethod
     def validar_isbn(isbn):
-        """Valida que el ISBN tenga 10 o 13 dígitos."""
+        """
+        Valida que el ISBN tenga 10 o 13 dígitos.
+        Args:
+            isbn (str): El ISBN a validar.
+        Returns:
+            bool: True si el ISBN es válido, False en caso contrario.
+        """
+        # Expresión regular para ISBN de 10 o 13 dígitos
         pattern = r"^\d{10}$|^\d{13}$"
         return bool(re.match(pattern, isbn))
-
+    
     @staticmethod
     def contar_libros():
         """Cuenta el número total de libros en la biblioteca."""
@@ -36,8 +50,15 @@ class Libro(db.Model):
 
     @staticmethod
     def validar_titulo(titulo):
-        """Valida que el título no esté duplicado."""
-        return not Libro.query.filter_by(titulo=titulo).first()
+        """
+        Valida que el título no esté duplicado.
+        Args:
+            titulo (str): El título a validar.
+        Raises:
+            ValueError: Si el título ya existe en la base de datos.
+        """
+        if Libro.query.filter_by(titulo=titulo).first():
+            raise ValueError("El título ya existe en la biblioteca.")
 
 class Usuario(UserMixin, db.Model):
     """
@@ -58,15 +79,21 @@ class Usuario(UserMixin, db.Model):
     rol = db.Column(db.String(20), default='usuario')  # Roles: 'bibliotecario' o 'usuario'
     email_confirmado = db.Column(db.Boolean, default=False)  # Nuevo campo
     token_confirmacion = db.Column(db.String(100), nullable=True)  # Nuevo campo
-
+    
+    def __repr__(self):
+        return f"<Usuario {self.nombre} ({self.rol})>"
+    
     def generar_token_confirmacion(self):
         """
-        Genera un token único para confirmar el correo.
+        Genera un token único para confirmar el correo electrónico del usuario.
+        El token se almacena en la base de datos y se devuelve para su uso.
+        Returns:
+            str: El token generado.
         """
-        self.token_confirmacion = secrets.token_urlsafe(32)  # Genera un token seguro
+        self.token_confirmacion = secrets.token_urlsafe(32)
         db.session.commit()
         return self.token_confirmacion
-
+    
     def confirmar_email(self):
         """
         Marca el correo del usuario como confirmado.
@@ -75,15 +102,20 @@ class Usuario(UserMixin, db.Model):
         self.token_confirmacion = None  # Elimina el token después de la confirmación
         db.session.commit()
 
-
-    def __repr__(self):
-        return f"<Usuario {self.nombre} ({self.rol})>"
-
     def es_bibliotecario(self):
         """
         Verifica si el usuario tiene el rol de bibliotecario.
         """
         return self.rol == 'bibliotecario'
+
+    def correo_confirmado(self):
+        """
+        Verifica si el correo electrónico del usuario ha sido confirmado.
+        Returns:
+            bool: True si el correo está confirmado, False en caso contrario.
+        """
+        return self.email_confirmado
+
 
 class Prestamo(db.Model):
     """
@@ -101,8 +133,20 @@ class Prestamo(db.Model):
     fecha_prestamo = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_devolucion = db.Column(db.DateTime, nullable=True)
 
-    libro = db.relationship('Libro', backref='prestamos')  # Relación con el modelo Libro
-    usuario = db.relationship('Usuario', backref='prestamos')  # Relación con el modelo Usuario
+    libro = db.relationship('Libro', backref=db.backref('prestamos', lazy=True))
+    usuario = db.relationship('Usuario', backref=db.backref('prestamos', lazy=True))
 
     def __repr__(self):
         return f"<Prestamo {self.libro.titulo} a {self.usuario.nombre}>"
+
+    def duracion_prestamo(self):
+        """
+        Calcula la duración del préstamo en días.
+        Returns:
+            int: Número de días que el libro ha estado prestado.
+        """
+        if not self.fecha_devolucion:
+            return (datetime.utcnow() - self.fecha_prestamo).days
+        return (self.fecha_devolucion - self.fecha_prestamo).days
+
+   

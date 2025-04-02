@@ -1,40 +1,65 @@
 from flask import Flask  # Importamos Flask para crear la aplicación
-from flask_sqlalchemy import SQLAlchemy  # Importamos SQLAlchemy para trabajar con la base de datos
+from flask_sqlalchemy import SQLAlchemy  # Para trabajar con la base de datos
 from flask_wtf.csrf import CSRFProtect  # Protección contra ataques CSRF
 from flask_login import LoginManager  # Manejo de sesiones de usuario
-from flask_mail import Mail, Message 
+from flask_mail import Mail  # Para enviar correos electrónicos
 
-# Creamos la instancia de la aplicación Flask
-app = Flask(__name__)
-
-# Configuramos una clave secreta para proteger las sesiones y los formularios
-app.config['SECRET_KEY'] = 'clave_secreta'  # Cambia esto por una clave segura en producción
-
-# Configuración de Flask-Mail
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # Cambia esto según tu proveedor de correo
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'tu_correo@gmail.com'  # Tu correo electrónico
-app.config['MAIL_PASSWORD'] = 'tu_contraseña'  # Tu contraseña de correo
-app.config['MAIL_DEFAULT_SENDER'] = 'tu_correo@gmail.com'
-
-mail = Mail(app)  # Inicializamos Flask-Mail
-
-# Configuramos la base de datos SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///biblioteca.db'  # Usamos SQLite para desarrollo
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Desactivamos el seguimiento de modificaciones para mejorar el rendimiento
-
-# Inicializamos las extensiones
-db = SQLAlchemy(app)  # Inicializamos SQLAlchemy para manejar la base de datos
-csrf = CSRFProtect(app)  # Activamos la protección CSRF
-login_manager = LoginManager(app)  # Inicializamos Flask-Login para manejar la autenticación
-login_manager.login_view = 'login'  # Especificamos la ruta de inicio de sesión
-
-# Importamos los módulos al final para evitar problemas de importación circular
-from modules.models import db  # Modelo de la base de datos
+# Importamos las configuraciones centralizadas
+from config import Config  # Configuraciones desde config.py
+from extensions import db, mail  # Instancias compartidas de SQLAlchemy y Flask-Mail
 from modules.auth import load_user  # Cargador de usuarios para Flask-Login
-from modules.routes import *  # Importamos todas las rutas
+
+# Importaciones explícitas de rutas
+from modules.routes import (
+    index, agregar_libro, editar_libro, eliminar_libro, login, registro
+)
+
+def create_app():
+    """
+    Función factory para crear y configurar la aplicación Flask.
+    Esto permite una mayor modularidad y facilidad para pruebas.
+    """
+    app = Flask(__name__)
+
+    # Cargamos las configuraciones desde el archivo `config.py`
+    app.config.from_object(Config)
+
+    # Inicializamos las extensiones
+    initialize_extensions(app)
+
+    # Registramos las rutas
+    register_routes(app)
+
+    return app
+
+
+def initialize_extensions(app):
+    """
+    Inicializa todas las extensiones de Flask.
+    """
+    db.init_app(app)  # Inicializamos SQLAlchemy
+    csrf = CSRFProtect(app)  # Activamos la protección CSRF
+    mail.init_app(app)  # Inicializamos Flask-Mail para el envío de correos
+
+    # Configuración de Flask-Login
+    login_manager = LoginManager(app)
+    login_manager.login_view = 'login'  # Especificamos la ruta de inicio de sesión
+    login_manager.user_loader(load_user)  # Asociamos el cargador de usuarios
+
+
+def register_routes(app):
+    """
+    Registra todas las rutas de la aplicación.
+    """
+    app.add_url_rule('/', 'index', index)
+    app.add_url_rule('/agregar_libro', 'agregar_libro', agregar_libro, methods=['GET', 'POST'])
+    app.add_url_rule('/editar_libro/<int:id>', 'editar_libro', editar_libro, methods=['GET', 'POST'])
+    app.add_url_rule('/eliminar_libro/<int:id>', 'eliminar_libro', eliminar_libro, methods=['POST'])
+    app.add_url_rule('/login', 'login', login, methods=['GET', 'POST'])
+    app.add_url_rule('/registro', 'registro', registro, methods=['GET', 'POST'])
+
 
 # Si ejecutamos este archivo directamente, iniciamos la aplicación
 if __name__ == '__main__':
-    app.run(debug=True)  # Modo debug activado para desarrollo
+    app = create_app()
+    app.run(debug=app.config['DEBUG'])  # El modo debug se controla desde `config.py`

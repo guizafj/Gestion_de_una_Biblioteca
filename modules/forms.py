@@ -15,7 +15,7 @@ class RegistroForm(FlaskForm):
     """
     nombre = StringField('Nombre', validators=[DataRequired(), Length(min=2, max=100)])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    contrasena = PasswordField('Contraseña', validators=[DataRequired(), Length(min=6)])
+    contrasena = PasswordField('Contraseña', validators=[DataRequired(), Length(min=8)])
     confirmar_contrasena = PasswordField('Confirmar Contraseña', validators=[DataRequired(), EqualTo('contrasena')])
     rol = SelectField('Rol', choices=[('usuario', 'Usuario'), ('bibliotecario', 'Bibliotecario')], default='usuario')
     submit = SubmitField('Registrarse')

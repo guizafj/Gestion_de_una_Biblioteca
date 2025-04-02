@@ -7,3 +7,4 @@ def load_user(user_id):
     Flask-Login usa esta función para cargar el usuario actual durante la sesión.
     """
     return Usuario.query.get(int(user_id))  # Buscamos el usuario por su ID
+

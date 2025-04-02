@@ -1,16 +1,26 @@
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from app import app, db
+from app import app, db, mail
 from modules.models import Libro, Usuario, Prestamo
 from modules.forms import RegistroForm, LoginForm
 from datetime import datetime, timedelta
-from flask_mail import Message
+from urllib.parse import urlencode
+from flask_mail import Message  # Import Message from flask_mail
 
+# Decorador personalizado para restringir acceso a bibliotecarios
+def bibliotecario_requerido(f):
+    def wrapper(*args, **kwargs):
+        if not current_user.es_bibliotecario():
+            flash('Solo los bibliotecarios pueden acceder a esta ruta.')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return wrapper
+
+# Rutas de Autenticación
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
     form = RegistroForm()
     if form.validate_on_submit():
-        # Crear un nuevo usuario
         usuario = Usuario(
             nombre=form.nombre.data,
             email=form.email.data,
@@ -20,13 +30,9 @@ def registro():
         db.session.add(usuario)
         db.session.commit()
 
-        # Generar el token de confirmación
+        # Generar y enviar correo de confirmación
         token = usuario.generar_token_confirmacion()
-
-        # Construir el enlace de confirmación
         confirm_url = url_for('confirmar_email', token=token, _external=True)
-
-        # Enviar el correo de confirmación
         msg = Message(
             subject="Confirma tu correo electrónico",
             recipients=[usuario.email],
@@ -40,15 +46,10 @@ def registro():
 
 @app.route('/confirmar_email/<token>')
 def confirmar_email(token):
-    """
-    Confirma el correo electrónico del usuario usando el token.
-    """
     usuario = Usuario.query.filter_by(token_confirmacion=token).first()
     if not usuario:
         flash('El enlace de confirmación es inválido o ha expirado.')
         return redirect(url_for('index'))
-
-    # Confirmar el correo del usuario
     usuario.confirmar_email()
     flash('Correo electrónico confirmado correctamente. Ahora puedes iniciar sesión.')
     return redirect(url_for('login'))
@@ -65,82 +66,17 @@ def login():
             login_user(usuario)
             flash('Inicio de sesión exitoso.')
             return redirect(url_for('index'))
-        else:
-            flash('Credenciales incorrectas.')
+        flash('Credenciales incorrectas.')
     return render_template('login.html', form=form)
 
-@app.route('/editar_rol/<int:usuario_id>', methods=['GET', 'POST'])
-@login_required
-def editar_rol(usuario_id):
-    """
-    Permite editar el rol de un usuario.
-    Solo los bibliotecarios pueden acceder a esta ruta.
-    """
-    if not current_user.es_bibliotecario():
-        flash('Solo los bibliotecarios pueden editar roles.')
-        return redirect(url_for('index'))
-
-    usuario = Usuario.query.get_or_404(usuario_id)
-
-    if request.method == 'POST':
-        nuevo_rol = request.form['rol']
-        if nuevo_rol in ['usuario', 'bibliotecario']:
-            usuario.rol = nuevo_rol
-            db.session.commit()
-            flash(f'Rol del usuario "{usuario.nombre}" actualizado a "{nuevo_rol}".')
-            return redirect(url_for('index'))
-        else:
-            flash('Rol no válido.')
-
-    return render_template('editar_rol.html', usuario=usuario)
-
 @app.route('/logout')
-@login_required  # Solo accesible para usuarios autenticados
+@login_required
 def logout():
-    """
-    Cierra la sesión del usuario actual.
-    """
-    logout_user()  # Cerramos la sesión con Flask-Login
-    flash('Sesión cerrada correctamente.')  # Mostramos un mensaje de éxito
-    return redirect(url_for('index'))  # Redirigimos a la página principal
+    logout_user()
+    flash('Sesión cerrada correctamente.')
+    return redirect(url_for('index'))
 
-@app.route('/agregar_libro', methods=['GET', 'POST'])
-@login_required  # Solo accesible para usuarios autenticados
-def agregar_libro():
-    """
-    Permite agregar un nuevo libro a la biblioteca.
-    Solo los bibliotecarios pueden acceder a esta ruta.
-    """
-    if not current_user.es_bibliotecario:  # Verificamos si el usuario es bibliotecario
-        flash('Solo los bibliotecarios pueden agregar libros.')  # Mostramos un mensaje de error
-        return redirect(url_for('index'))  # Redirigimos a la página principal
-    
-    if request.method == 'POST':  # Si se envía el formulario
-        # Obtenemos los datos del formulario
-        isbn = request.form['isbn'].strip()
-        titulo = request.form['titulo'].strip()
-        autor = request.form['autor'].strip()
-
-        # Validamos el ISBN (10 o 13 dígitos)
-        if not Libro.validar_isbn(isbn):
-            flash('El ISBN debe tener 10 o 13 dígitos.')
-            return redirect(url_for('agregar_libro'))
-
-        # Validamos que el título no esté duplicado
-        if not Libro.validar_titulo(titulo):
-            flash('Ya existe un libro con este título.')
-            return redirect(url_for('agregar_libro'))
-
-        # Creamos el nuevo libro
-        libro = Libro(isbn=isbn, titulo=titulo, autor=autor)
-        db.session.add(libro)  # Añadimos el libro a la base de datos
-        db.session.commit()  # Guardamos los cambios
-
-        flash('Libro agregado correctamente.')  # Mostramos un mensaje de éxito
-        return redirect(url_for('index'))  # Redirigimos a la página principal
-
-    return render_template('agregar_libro.html')  # Renderizamos la plantilla con el formulario
-
+# Rutas de Libros
 @app.route('/')
 def index():
     libros = Libro.query.all()
@@ -149,30 +85,82 @@ def index():
 
 @app.route('/buscar', methods=['GET'])
 def buscar():
-    """
-    Permite buscar libros por título, autor o ISBN.
-    """
     query = request.args.get('query', '').strip()
     if not query:
         flash('Por favor, ingresa un término de búsqueda.')
         return redirect(url_for('index'))
-
     libros = Libro.query.filter(
         (Libro.titulo.ilike(f"%{query}%")) |
         (Libro.autor.ilike(f"%{query}%")) |
         (Libro.isbn == query)
     ).all()
-
     if not libros:
         flash('No se encontraron resultados para tu búsqueda.')
     return render_template('buscar_libro.html', libros=libros, query=query)
 
-@app.route('/historial')
+@app.route('/agregar_libro', methods=['GET', 'POST'])
 @login_required
-def historial():
-    prestamos = Prestamo.query.filter_by(usuario_id=current_user.id).all()
-    return render_template('historial.html', prestamos=prestamos)
+@bibliotecario_requerido
+def agregar_libro():
+    if request.method == 'POST':
+        isbn = request.form['isbn'].strip()
+        titulo = request.form['titulo'].strip()
+        autor = request.form['autor'].strip()
 
+        if not Libro.validar_isbn(isbn):
+            flash('El ISBN debe tener 10 o 13 dígitos.')
+            return redirect(url_for('agregar_libro'))
+        if not Libro.validar_titulo(titulo):
+            flash('Ya existe un libro con este título.')
+            return redirect(url_for('agregar_libro'))
+
+        libro = Libro(isbn=isbn, titulo=titulo, autor=autor)
+        db.session.add(libro)
+        db.session.commit()
+        flash('Libro agregado correctamente.')
+        return redirect(url_for('index'))
+    return render_template('agregar_libro.html')
+
+@app.route('/editar_libro_lista')
+@login_required
+@bibliotecario_requerido
+def editar_libro_lista():
+    libros = Libro.query.all()
+    return render_template('editar_libro_lista.html', libros=libros)
+
+@app.route('/eliminar_libro_lista')
+@login_required
+@bibliotecario_requerido
+def eliminar_libro_lista():
+    libros = Libro.query.all()
+    return render_template('eliminar_libro_lista.html', libros=libros)
+
+@app.route('/editar_libro/<int:libro_id>', methods=['GET', 'POST'])
+@login_required
+@bibliotecario_requerido
+def editar_libro(libro_id):
+    libro = Libro.query.get_or_404(libro_id)
+    if request.method == 'POST':
+        libro.titulo = request.form['titulo']
+        libro.autor = request.form['autor']
+        db.session.commit()
+        flash(f'Libro "{libro.titulo}" editado correctamente.')
+        return redirect(url_for('index'))
+    return render_template('editar_libro.html', libro=libro)
+
+@app.route('/eliminar_libro/<int:libro_id>', methods=['GET', 'POST'])
+@login_required
+@bibliotecario_requerido
+def eliminar_libro(libro_id):
+    libro = Libro.query.get_or_404(libro_id)
+    if request.method == 'POST':
+        db.session.delete(libro)
+        db.session.commit()
+        flash(f'Libro "{libro.titulo}" eliminado correctamente.')
+        return redirect(url_for('index'))
+    return render_template('eliminar_libro.html', libro=libro)
+
+# Rutas de Préstamos
 @app.route('/prestar/<int:libro_id>', methods=['GET', 'POST'])
 @login_required
 def prestar(libro_id):
@@ -180,7 +168,6 @@ def prestar(libro_id):
     if not libro.disponible:
         flash('El libro no está disponible para préstamo.')
         return redirect(url_for('index'))
-
     if request.method == 'POST':
         prestamo = Prestamo(libro_id=libro.id, usuario_id=current_user.id)
         libro.disponible = False
@@ -195,11 +182,9 @@ def prestar(libro_id):
 def devolver(libro_id):
     libro = Libro.query.get_or_404(libro_id)
     prestamo = Prestamo.query.filter_by(libro_id=libro.id, fecha_devolucion=None).first()
-
     if not prestamo:
         flash('Este libro no está prestado actualmente.')
         return redirect(url_for('index'))
-
     if request.method == 'POST':
         prestamo.fecha_devolucion = datetime.utcnow()
         libro.disponible = True
@@ -211,81 +196,16 @@ def devolver(libro_id):
 @app.route('/recordatorios')
 @login_required
 def recordatorios():
-    fecha_limite = datetime.utcnow() - timedelta(days=7)
+    fecha_limite = datetime.timezone.utc() - timedelta(days=7)
     prestamos_pendientes = Prestamo.query.filter(
         Prestamo.usuario_id == current_user.id,
         Prestamo.fecha_devolucion == None,
         Prestamo.fecha_prestamo < fecha_limite
     ).all()
-
     return render_template('recordatorios.html', prestamos_pendientes=prestamos_pendientes)
-@app.route('/editar_libro_lista')
+
+@app.route('/historial')
 @login_required
-def editar_libro_lista():
-    """
-    Muestra una lista de libros disponibles para editar.
-    Solo los bibliotecarios pueden acceder a esta ruta.
-    """
-    if not current_user.es_bibliotecario():
-        flash('Solo los bibliotecarios pueden editar libros.')
-        return redirect(url_for('index'))
-
-    libros = Libro.query.all()
-    return render_template('editar_libro_lista.html', libros=libros)
-
-@app.route('/eliminar_libro_lista')
-@login_required
-def eliminar_libro_lista():
-    """
-    Muestra una lista de libros disponibles para eliminar.
-    Solo los bibliotecarios pueden acceder a esta ruta.
-    """
-    if not current_user.es_bibliotecario():
-        flash('Solo los bibliotecarios pueden eliminar libros.')
-        return redirect(url_for('index'))
-
-    libros = Libro.query.all()
-    return render_template('eliminar_libro_lista.html', libros=libros)
-
-@app.route('/editar_libro/<int:libro_id>', methods=['GET', 'POST'])
-@login_required
-def editar_libro(libro_id):
-    """
-    Permite editar un libro específico.
-    Solo los bibliotecarios pueden acceder a esta ruta.
-    """
-    if not current_user.es_bibliotecario():
-        flash('Solo los bibliotecarios pueden editar libros.')
-        return redirect(url_for('index'))
-
-    libro = Libro.query.get_or_404(libro_id)
-    if request.method == 'POST':
-        libro.titulo = request.form['titulo']
-        libro.autor = request.form['autor']
-        db.session.commit()
-        flash(f'Libro "{libro.titulo}" editado correctamente.')
-        return redirect(url_for('index'))
-    return render_template('editar_libro.html', libro=libro)
-
-@app.route('/eliminar_libro/<int:libro_id>', methods=['GET', 'POST'])
-@login_required
-def eliminar_libro(libro_id):
-    """
-    Permite eliminar un libro específico.
-    Solo los bibliotecarios pueden acceder a esta ruta.
-    """
-    if not current_user.es_bibliotecario():
-        flash('Solo los bibliotecarios pueden eliminar libros.')
-        return redirect(url_for('index'))
-
-    libro = Libro.query.get_or_404(libro_id)
-
-    if request.method == 'POST':
-        # Confirmación de eliminación
-        db.session.delete(libro)
-        db.session.commit()
-        flash(f'Libro "{libro.titulo}" eliminado correctamente.')
-        return redirect(url_for('index'))
-
-    # Mostrar página de confirmación
-    return render_template('eliminar_libro.html', libro=libro)
+def historial():
+    prestamos = Prestamo.query.filter_by(usuario_id=current_user.id).all()
+    return render_template('historial.html', prestamos=prestamos)

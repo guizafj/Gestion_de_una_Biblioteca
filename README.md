@@ -115,8 +115,7 @@ biblioteca_flask/
 │   ├── registro.html       # Página de registro de usuarios
 │   ├── prestar_libro.html  # Formulario para prestar libros
 │   ├── devolver_libro.html # Formulario para devolver libros
-│   ├── historial.html      # Historial de préstamos
-│   ├── eliminar_libro.html # Confirmación de eliminación de libros
+│   └── historial.html      # Historial de préstamos
 ├── static/                 # Archivos estáticos (CSS, JS, imágenes)
 │   ├── css/
 │   │   └── styles.css      # Hoja de estilos CSS

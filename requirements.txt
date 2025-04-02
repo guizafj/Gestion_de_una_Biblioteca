@@ -5,4 +5,3 @@ Flask-Login==0.6.2         # Manejo de autenticación y sesiones de usuarios
 Flask-Mail==0.9.1          # Para enviar correos electrónicos.
 WTForms==3.0.1             # Creación y validación de formularios
 email-validator==2.0.0     # Para validar direcciones de correo electrónico.
-secrets==1.0               # Para generar tokens seguros
