@@ -5,6 +5,7 @@ from modules.forms import RegistroForm, LoginForm
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode  # Para construir cadenas de consulta
 from flask_mail import Message  # Para enviar correos electrónicos
+from functools import wraps
 
 # Decorador personalizado para restringir acceso a bibliotecarios
 def bibliotecario_requerido(f):
@@ -12,6 +13,7 @@ def bibliotecario_requerido(f):
     Decorador para restringir el acceso a rutas exclusivas de bibliotecarios.
     Si el usuario no es un bibliotecario, se redirige al índice con un mensaje flash.
     """
+    @wraps(f) # Esto preserva el nombre y los metadatos de la función original
     def wrapper(*args, **kwargs):
         if not current_user.es_bibliotecario():
             flash('Acceso denegado. Solo los bibliotecarios pueden acceder a esta ruta.', 'danger')
@@ -24,6 +26,15 @@ def register_routes(app, db, mail):
     Registra todas las rutas de la aplicación.
     Esta función permite evitar importaciones circulares al usar el patrón "App Factory".
     """
+    @app.route('/')
+    def index():
+        """
+        Página principal de la aplicación.
+        Muestra una lista de libros disponibles y el total de libros en la biblioteca.
+        """
+        libros = Libro.query.all()
+        total_libros = Libro.contar_libros()
+        return render_template('index.html', libros=libros, total_libros=total_libros)
 
     @app.route('/registro', methods=['GET', 'POST'])
     def registro():
@@ -100,16 +111,7 @@ def register_routes(app, db, mail):
         flash('Sesión cerrada correctamente.', 'info')
         return redirect(url_for('index'))
 
-    @app.route('/')
-    def index():
-        """
-        Página principal de la aplicación.
-        Muestra una lista de libros disponibles y el total de libros en la biblioteca.
-        """
-        libros = Libro.query.all()
-        total_libros = Libro.contar_libros()
-        return render_template('index.html', libros=libros, total_libros=total_libros)
-
+ 
     @app.route('/buscar', methods=['GET'])
     def buscar():
         """
