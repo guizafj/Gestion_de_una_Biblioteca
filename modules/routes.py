@@ -163,27 +163,16 @@ def register_routes(app, db, mail):
             return redirect(url_for('index'))
         return render_template('agregar_libro.html')
 
-    @app.route('/editar_libro_lista')
+    @app.route('/gestion_libros')
     @login_required
     @bibliotecario_requerido
-    def editar_libro_lista():
+    def gestion_libros():
         """
-        Muestra una lista de libros disponibles para editar.
+        Muestra una lista de libros con opciones para editar o eliminar.
         Solo los bibliotecarios pueden acceder a esta ruta.
         """
         libros = Libro.query.all()
-        return render_template('editar_libro_lista.html', libros=libros)
-
-    @app.route('/eliminar_libro_lista')
-    @login_required
-    @bibliotecario_requerido
-    def eliminar_libro_lista():
-        """
-        Muestra una lista de libros disponibles para eliminar.
-        Solo los bibliotecarios pueden acceder a esta ruta.
-        """
-        libros = Libro.query.all()
-        return render_template('eliminar_libro_lista.html', libros=libros)
+        return render_template('gestion_libros.html', libros=libros) 
 
     @app.route('/editar_libro/<int:libro_id>', methods=['GET', 'POST'])
     @login_required

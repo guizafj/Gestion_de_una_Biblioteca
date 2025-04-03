@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2>Eliminar Libros</h2>
+    <h2>Gestión de Libros</h2>
     <ul>
         {% for libro in libros %}
             <li>
                 {{ libro.titulo }} - {{ libro.autor }}
+                <!-- Botón para editar -->
+                <a href="{{ url_for('editar_libro', libro_id=libro.id) }}" class="btn-editar">Editar</a>
+                <!-- Formulario para eliminar -->
                 <form method="POST" action="{{ url_for('eliminar_libro', libro_id=libro.id) }}" style="display:inline;">
-                    <button type="submit">Eliminar</button>
+                    <button type="submit" class="btn-eliminar">Eliminar</button>
                 </form>
             </li>
         {% endfor %}

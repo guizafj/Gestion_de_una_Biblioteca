@@ -93,7 +93,7 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/guizafj/Gestion_y_Administracion_de_una_Biblioteca.git
+   git clone https://github.com/guizafj/Gestion_de_una_Biblioteca.git
    cd Gestion_y_Administracion_de_una_Biblioteca  
 
 ## 📦 Estructura del proyecto (en progreso)
@@ -102,19 +102,28 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 biblioteca_flask/
 ├── app.py                  # Archivo principal de la aplicación
 ├── modules/                # Carpeta para módulos independientes
+|   |__ __init__.py         # Este archivo marca el directorio como un paquete de Python.
 │   ├── models.py           # Definición de modelos (libros, usuarios, préstamos)
 │   ├── forms.py            # Formularios usando Flask-WTF
 │   ├── routes.py           # Rutas y lógica de negocio
 │   └── auth.py             # Lógica de autenticación
 ├── templates/              # Archivos HTML
+|   ├── agregar_libro.html  # Formulario para agregar libros
+|   ├── autores.html        # Pagina de autores contenidos en la biblioteca
 │   ├── base.html           # Plantilla base
-│   ├── index.html          # Página principal
-│   ├── agregar_libro.html  # Formulario para agregar libros
 │   ├── buscar_libro.html   # Página de búsqueda
-│   ├── login.html          # Página de inicio de sesión
-│   ├── registro.html       # Página de registro de usuarios
-│   ├── prestar_libro.html  # Formulario para prestar libros
 │   ├── devolver_libro.html # Formulario para devolver libros
+|   ├── editar_libro.html    # Formulario para editar libros
+|   ├── editar_rol.html     # Formulario para modificar el rol de usuarios en la biblioteca
+|   ├── eliminar_libro.html # Formulario para eliminar libros
+|   ├── error.html          # Pagina para mostrar errores en la aplicación
+|   ├── gestion_libros.html # Pagina para gestionar los libros contenidos en la biblioteca
+|   ├── historial.html      # Se muestra el historial de prestamos por el usuario
+│   ├── index.html          # Página principal
+│   ├── login.html          # Página de inicio de sesión
+│   ├── prestar_libro.html  # Formulario para prestar libros
+│   ├── registro.html       # Página de registro de usuarios
+|   ├── recordatorios.html  # Visualizacion de recordatorios por usuario
 │   └── historial.html      # Historial de préstamos
 ├── static/                 # Archivos estáticos (CSS, JS, imágenes)
 │   ├── css/
