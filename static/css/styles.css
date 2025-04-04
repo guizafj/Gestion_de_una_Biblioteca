@@ -1,0 +1,93 @@
+/* Reset básico para eliminar márgenes y paddings predeterminados */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Estilos globales */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f9f9f9;
+    color: #333;
+    padding: 1rem;
+}
+
+header {
+    background-color: #007bff;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+nav a {
+    text-decoration: none;
+    color: white;
+    background-color: #0056b3;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    text-align: center;
+}
+
+nav a:hover {
+    background-color: #004494;
+}
+
+main {
+    margin-top: 1rem;
+}
+
+ul {
+    list-style: none;
+    padding: 0.5rem;
+    background-color: #ffeb3b;
+    border-radius: 0.25rem;
+}
+
+ul li {
+    margin-bottom: 0.5rem;
+}
+
+/* Media Queries para pantallas más grandes */
+@media (min-width: 600px) {
+    header {
+        text-align: left;
+    }
+
+    nav {
+        flex-direction: row;
+        justify-content: space-around;
+    }
+
+    nav a {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+@media (min-width: 900px) {
+    body {
+        padding: 2rem;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    nav a {
+        padding: 0.75rem;
+    }
+}

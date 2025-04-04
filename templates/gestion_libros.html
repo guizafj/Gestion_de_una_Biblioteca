@@ -10,7 +10,7 @@
                 <a href="{{ url_for('editar_libro', libro_id=libro.id) }}" class="btn-editar">Editar</a>
                 <!-- Formulario para eliminar -->
                 <form method="POST" action="{{ url_for('eliminar_libro', libro_id=libro.id) }}" style="display:inline;">
-                    <button type="submit" class="btn-eliminar">Eliminar</button>
+                    <button type="submit" class="btn-eliminar" data-titulo="{{ libro.titulo }}">Eliminar</button>
                 </form>
             </li>
         {% endfor %}

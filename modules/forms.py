@@ -3,6 +3,7 @@ from wtforms import StringField, PasswordField, SubmitField, ValidationError
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 from wtforms import SelectField
 from modules.models import Usuario
+from modules.models import Libro
 
 class RegistroForm(FlaskForm):
     """
@@ -43,3 +44,13 @@ class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     contrasena = PasswordField('Contraseña', validators=[DataRequired()])
     submit = SubmitField('Iniciar Sesión')
+
+class AgregarLibroForm(FlaskForm):
+    isbn = StringField('ISBN', validators=[DataRequired()])
+    titulo = StringField('Título', validators=[DataRequired()])
+    autor = StringField('Autor', validators=[DataRequired()])
+    submit = SubmitField('Agregar Libro')
+
+    def validate_titulo(self, field):
+        if not Libro.validar_titulo(field.data):
+            raise ValidationError('Ya existe un libro con este título. Por favor, elige otro.')

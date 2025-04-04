@@ -1,3 +1,4 @@
+# Dependencias principales
 Flask==2.3.2               # Framework web ligero
 Flask-SQLAlchemy==3.0.5    # Integración de SQLAlchemy con Flask
 Flask-Login==0.6.2         # Manejo de autenticación y sesiones de usuarios
@@ -7,14 +8,14 @@ Flask-WTF==1.1.1           # Integración de WTForms con Flask
 email-validator==2.0.0     # Para validar direcciones de correo electrónico
 Werkzeug>=2.2.3            # Funciones internas de Flask
 python-dotenv==1.0.0       # Para cargar variables de entorno desde .env
-MarkupSafe>=2.1.1
-
-# Opcionales pero recomendados
-Flask-Migrate==4.0.4       # Migraciones de la base de datos con Alembic
 Flask-Bcrypt==1.0.1        # Hashing seguro de contraseñas
+
+# Dependencias opcionales
+Flask-Migrate==4.0.4       # Migraciones de la base de datos con Alembic
 Flask-DebugToolbar==0.13.1 # Herramienta de depuración durante el desarrollo
 gunicorn==20.1.0           # Servidor WSGI para producción
+Flask-CORS==4.0.0          # Manejo de CORS si es necesario
 
+# Dependencias para pruebas
 pytest==7.4.2              # Pruebas unitarias
 pytest-flask==1.2.0        # Integración de pytest con Flask
-Flask-CORS==4.0.0          # Manejo de CORS si es necesario
