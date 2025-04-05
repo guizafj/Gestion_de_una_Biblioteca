@@ -34,31 +34,21 @@ class Libro(db.Model):
         return f"<Libro {self.titulo}>"
 
     @validates('isbn')
-    def validar_isbn(self, isbn):
+    def validar_isbn(self, key, isbn):
         """
-        Valida que el ISBN tenga 10 o 13 dígitos.
-        Args:
-            isbn (str): El ISBN a validar.
-        Returns:
-            bool: True si el ISBN es válido, False en caso contrario.
+        Valida que el ISBN tenga 10 o 13 dígitos y sea único en la base de datos.
         """
-        # Expresión regular para ISBN de 10 o 13 dígitos
+        # Validar formato del ISBN
         pattern = r"^\d{10}$|^\d{13}$"
-        return bool(re.match(pattern, isbn))
-    
-    @validates('isbn')
-    def validar_isbn_unico(self, key, isbn):
-        """
-        Valida que el ISBN sea único en la base de datos.
-        Args:
-            isbn (str): El ISBN a validar.
-        Raises:
-            ValueError: Si el ISBN ya existe en la base de datos.
-        """
+        if not re.match(pattern, isbn):
+            raise ValueError("El ISBN debe tener 10 o 13 dígitos.")
+
+        # Validar unicidad del ISBN
         if Libro.query.filter_by(isbn=isbn).first():
             raise ValueError("El ISBN ya existe en la base de datos.")
+        
         return isbn
-    
+        
     @staticmethod
     def contar_libros():
         """Cuenta el número total de libros en la biblioteca."""
@@ -68,12 +58,10 @@ class Libro(db.Model):
     def validar_titulo(titulo):
         """
         Valida que el título no esté duplicado.
-        Args:
-            titulo (str): El título a validar.
-        Returns:
-            bool: True si el título es válido (no duplicado), False en caso contrario.
         """
-        return not Libro.query.filter_by(titulo=titulo).first()
+        if Libro.query.filter_by(titulo=titulo).first():
+            raise ValueError("El título ya existe en la base de datos.")
+        return True
 
 class Usuario(UserMixin, db.Model):
     """
@@ -112,10 +100,15 @@ class Usuario(UserMixin, db.Model):
         Raises:
             ValueError: Si el correo no tiene un formato válido.
         """
-        # Expresión regular para validar el formato del correo
+        # Validar formato del correo
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(pattern, email):
             raise ValueError("El correo electrónico no tiene un formato válido.")
+
+        # Validar unicidad del correo
+        if Usuario.query.filter_by(email=email).first():
+            raise ValueError("El correo electrónico ya está registrado.")
+        
         return email
 
     @validates('nombre')
@@ -178,6 +171,7 @@ class Usuario(UserMixin, db.Model):
         """
         self.token_confirmacion = secrets.token_urlsafe(32)
         self.token_expiracion = datetime.utcnow() + timedelta(seconds=expiracion)
+        db.session.commit()  # Guarda los cambios en la base de datos
         return self.token_confirmacion
     
     def confirmar_email(self):
@@ -186,17 +180,20 @@ class Usuario(UserMixin, db.Model):
         Raises:
         ValueError: Si el token ha expirado.
         """
+        if not self.token_expiracion:
+            raise ValueError("El token de confirmación no es válido o ya ha sido utilizado.")
+    
         if datetime.utcnow() > self.token_expiracion:
             raise ValueError("El token ha expirado.")
-    
+        
         # Marcar el correo como confirmado
         self.email_confirmado = True
-    
+        
         # Eliminar el token y su expiración
         self.token_confirmacion = None
         self.token_expiracion = None
-    
-         # Guardar los cambios en la base de datos
+        
+        # Guardar los cambios en la base de datos
         db.session.commit()
 
     def correo_confirmado(self):
@@ -205,7 +202,7 @@ class Usuario(UserMixin, db.Model):
         Returns:
             bool: True si el correo está confirmado, False en caso contrario.
         """
-        return self.email_confirmado
+        return self.email_confirmado and self.token_confirmacion is None
     
     def es_bibliotecario(self):
         """

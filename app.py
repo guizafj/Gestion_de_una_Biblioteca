@@ -10,7 +10,8 @@ def create_app():
     Crea y configura la aplicación Flask.
     """
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(Config) # Carga la configuración desde Config
+    
 
     # Inicializar extensiones
     initialize_extensions(app)
@@ -30,6 +31,7 @@ def initialize_extensions(app):
     login_manager = LoginManager(app)
     login_manager.login_view = 'login'
     login_manager.user_loader(load_user)
+
 
 # Si ejecutamos este archivo directamente, iniciamos la aplicación
 if __name__ == '__main__':
