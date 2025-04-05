@@ -2,10 +2,30 @@
 
 {% block content %}
     <h2>Recordatorios de Devolución Pendiente</h2>
-    <ul>
+
+    <!-- Mensajes Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages" class="mt-4">
+                {% for category, message in messages %}
+                    <div class="flash-message alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Lista de Recordatorios -->
+    <ul class="list-group mt-3">
         {% for prestamo in prestamos_pendientes %}
-            <li>{{ prestamo.libro.titulo }} (Préstamo desde {{ prestamo.fecha_prestamo.strftime('%d/%m/%Y') }})</li>
+            <li class="list-group-item">
+                <strong>{{ prestamo.libro.titulo }}</strong> 
+                (Préstamo desde {{ prestamo.fecha_prestamo.strftime('%d/%m/%Y') }})
+            </li>
         {% endfor %}
     </ul>
-    <a href="{{ url_for('index') }}">Volver al Inicio</a>
+
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Volver al Inicio</a>
 {% endblock %}

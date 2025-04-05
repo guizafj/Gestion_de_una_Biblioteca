@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Recuperar cuenta</h2>
+<form method="POST" action="{{ url_for('recuperar_cuenta') }}">
+    <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Enviar enlace de recuperación</button>
+</form>
+{% endblock %}

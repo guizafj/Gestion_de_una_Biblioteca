@@ -1,13 +1,23 @@
 import os
 from dotenv import load_dotenv
 
+# Cargar las variables de entorno desde el archivo .env
+load_dotenv()
+
 class Config:
+    """
+    Configuración principal de la aplicación Flask.
+    """
+
     # Configuración de la base de datos
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
     if not SQLALCHEMY_DATABASE_URI:
         raise ValueError("La variable SQLALCHEMY_DATABASE_URI no está configurada.")
+    # Asegurarse de que la base de datos use UTF-8 (para MySQL/MariaDB)
+    if 'mysql' in SQLALCHEMY_DATABASE_URI and 'charset' not in SQLALCHEMY_DATABASE_URI:
+        SQLALCHEMY_DATABASE_URI += '?charset=utf8mb4'
 
-    # Clave secreta
+    # Clave secreta para la aplicación
     SECRET_KEY = os.getenv('SECRET_KEY')
     if not SECRET_KEY:
         raise ValueError("La variable SECRET_KEY no está configurada.")
@@ -21,7 +31,7 @@ class Config:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
 
-    # Modo debug
+    # Modo debug (solo para desarrollo)
     DEBUG = os.getenv('DEBUG', 'False').lower() in ['true', '1', 't']
 
     # Configuración de cookies seguras
@@ -29,5 +39,8 @@ class Config:
     SESSION_COOKIE_HTTPONLY = os.getenv('SESSION_COOKIE_HTTPONLY', 'True').lower() in ['true', '1', 't']
     SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
 
-    # Preferencia de esquema de URL
+    # Preferencia de esquema de URL (http o https)
     PREFERRED_URL_SCHEME = os.getenv('PREFERRED_URL_SCHEME', 'http')
+
+    # Configuración de SQLAlchemy
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Desactiva el seguimiento de modificaciones para mejorar el rendimiento

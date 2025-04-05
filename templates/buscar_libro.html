@@ -2,11 +2,46 @@
 
 {% block content %}
     <h2>Resultados de la Búsqueda</h2>
+
+    <!-- Mensajes Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Formulario de búsqueda -->
+    <form id="search-form" method="GET" action="{{ url_for('buscar') }}">
+        <div class="form-group input-container">
+            <label for="search-query">Buscar libros:</label>
+            <input type="text" id="search-query" name="query" class="form-control" placeholder="Ingresa un término de búsqueda" value="{{ query }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+
+    <!-- Resultados de la búsqueda -->
     <p>Término buscado: "{{ query }}"</p>
-    <ul>
-        {% for libro in libros %}
-            <li>{{ libro.titulo }} - {{ libro.autor }} ({{ 'Disponible' if libro.disponible else 'Prestado' }})</li>
-        {% endfor %}
-    </ul>
-    <a href="{{ url_for('index') }}">Volver al Inicio</a>
+    {% if libros %}
+        <ul class="list-group">
+            {% for libro in libros %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <strong>{{ libro.titulo }}</strong> - {{ libro.autor }}
+                    <span class="badge {{ 'bg-success' if libro.disponible else 'bg-danger' }}">
+                        {{ 'Disponible' if libro.disponible else 'Prestado' }}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No se encontraron resultados para "{{ query }}".</p>
+    {% endif %}
+
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Volver al Inicio</a>
 {% endblock %}

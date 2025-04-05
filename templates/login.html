@@ -2,14 +2,44 @@
 
 {% block content %}
     <h2>Iniciar Sesión</h2>
-    <form method="POST">
-        <label for="email">Email:</label>
-        <input type="email" name="email" required><br>
 
-        <label for="contrasena">Contraseña:</label>
-        <input type="password" name="contrasena" required><br>
+    <!-- Mensajes Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages" class="mt-4">
+                {% for category, message in messages %}
+                    <div class="flash-message alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
-        <button type="submit">Iniciar Sesión</button>
-        <a href="{{ url_for('registro') }}">Registrarse</a>
+    <form id="login-form" method="POST" action="{{ url_for('login') }}">
+        {{ form.hidden_tag() }}
+        
+        <!-- Campo Email -->
+        <div class="form-group input-container">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" class="form-control" required>
+            {% for error in form.email.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Campo Contraseña -->
+        <div class="form-group input-container">
+            <label for="contrasena">Contraseña:</label>
+            <input type="password" id="contrasena" name="contrasena" class="form-control" required>
+            {% for error in form.contrasena.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Botón de Envío -->
+        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+        <a href="{{ url_for('registro') }}" class="btn btn-link">Registrarse</a>
     </form>
 {% endblock %}

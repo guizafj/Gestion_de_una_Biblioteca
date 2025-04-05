@@ -4,7 +4,9 @@
     <h2>Devolver Libro</h2>
     <p>¿Deseas devolver el libro "{{ libro.titulo }}"?</p>
     <form method="POST">
-        <button type="submit">Confirmar Devolución</button>
-        <a href="{{ url_for('index') }}">Cancelar</a>
+        <!-- Botón de confirmación -->
+        <button type="submit" class="btn btn-primary btn-confirmar" data-titulo="{{ libro.titulo }}">Confirmar Devolución</button>
+        <!-- Botón de cancelación -->
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 {% endblock %}

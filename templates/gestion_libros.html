@@ -2,18 +2,20 @@
 
 {% block content %}
     <h2>Gestión de Libros</h2>
-    <ul>
+    <ul class="list-group">
         {% for libro in libros %}
-            <li>
-                {{ libro.titulo }} - {{ libro.autor }}
-                <!-- Botón para editar -->
-                <a href="{{ url_for('editar_libro', libro_id=libro.id) }}" class="btn-editar">Editar</a>
-                <!-- Formulario para eliminar -->
-                <form method="POST" action="{{ url_for('eliminar_libro', libro_id=libro.id) }}" style="display:inline;">
-                    <button type="submit" class="btn-eliminar" data-titulo="{{ libro.titulo }}">Eliminar</button>
-                </form>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ libro.titulo }} - {{ libro.autor }}</span>
+                <div>
+                    <!-- Botón para editar -->
+                    <a href="{{ url_for('editar_libro', libro_id=libro.id) }}" class="btn btn-primary btn-sm">Editar</a>
+                    <!-- Formulario para eliminar -->
+                    <form method="POST" action="{{ url_for('eliminar_libro', libro_id=libro.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm btn-eliminar" data-titulo="{{ libro.titulo }}">Eliminar</button>
+                    </form>
+                </div>
             </li>
         {% endfor %}
     </ul>
-    <a href="{{ url_for('index') }}">Volver al Inicio</a>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Volver al Inicio</a>
 {% endblock %}

@@ -2,13 +2,32 @@
 
 {% block content %}
     <h2>Mi Historial de Préstamos</h2>
-    <ul>
+
+    <!-- Mensajes Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages" class="mt-4">
+                {% for category, message in messages %}
+                    <div class="flash-message alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Lista de préstamos -->
+    <ul class="list-group mt-3">
         {% for prestamo in prestamos %}
-            <li>
-                {{ prestamo.libro.titulo }} - 
-                {{ 'Devuelto' if prestamo.fecha_devolucion else 'Pendiente' }}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ prestamo.libro.titulo }}</span>
+                <span class="badge {{ 'bg-success' if prestamo.fecha_devolucion else 'bg-warning' }}">
+                    {{ 'Devuelto' if prestamo.fecha_devolucion else 'Pendiente' }}
+                </span>
             </li>
         {% endfor %}
     </ul>
-    <a href="{{ url_for('index') }}">Volver al Inicio</a>
+
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Volver al Inicio</a>
 {% endblock %}

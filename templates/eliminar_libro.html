@@ -9,7 +9,9 @@
         <li><strong>ISBN:</strong> {{ libro.isbn }}</li>
     </ul>
     <form method="POST">
-        <button type="submit">Confirmar Eliminación</button>
-        <a href="{{ url_for('index') }}">Cancelar</a>
+        <!-- Botón de confirmación -->
+        <button type="submit" class="btn btn-danger btn-eliminar" data-titulo="{{ libro.titulo }}">Confirmar Eliminación</button>
+        <!-- Botón de cancelación -->
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 {% endblock %}

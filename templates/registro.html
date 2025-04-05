@@ -2,41 +2,61 @@
 
 {% block content %}
     <h2>Registro de Usuario</h2>
-    <form method="POST" action="{{ url_for('registro') }}">
+
+    <!-- Mensajes Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages" class="mt-4">
+                {% for category, message in messages %}
+                    <div class="flash-message alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form id="registro-form" method="POST" action="{{ url_for('registro') }}">
         {{ form.hidden_tag() }}
-    
-        <div>
+        
+        <!-- Campo Nombre -->
+        <div class="form-group input-container">
             <label for="nombre">Nombre</label>
-            {{ form.nombre(class="form-control") }}
+            {{ form.nombre(class="form-control", id="nombre") }}
             {% for error in form.nombre.errors %}
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         </div>
-    
-        <div>
+        
+        <!-- Campo Email -->
+        <div class="form-group input-container">
             <label for="email">Email</label>
-            {{ form.email(class="form-control") }}
+            {{ form.email(class="form-control", id="email") }}
             {% for error in form.email.errors %}
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         </div>
-    
-        <div>
+        
+        <!-- Campo Contraseña -->
+        <div class="form-group input-container">
             <label for="contrasena">Contraseña</label>
-            {{ form.contrasena(class="form-control") }}
+            {{ form.contrasena(class="form-control", id="contrasena") }}
             {% for error in form.contrasena.errors %}
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         </div>
-    
-        <div>
+        
+        <!-- Campo Confirmar Contraseña -->
+        <div class="form-group input-container">
             <label for="confirmar_contrasena">Confirmar Contraseña</label>
-            {{ form.confirmar_contrasena(class="form-control") }}
+            {{ form.confirmar_contrasena(class="form-control", id="confirmar_contrasena") }}
             {% for error in form.confirmar_contrasena.errors %}
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         </div>
-            
+        
+        <!-- Botón de Envío -->
         <button type="submit" class="btn btn-primary">Registrarse</button>
     </form>
 {% endblock %}

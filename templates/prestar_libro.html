@@ -4,7 +4,9 @@
     <h2>Prestar Libro</h2>
     <p>¿Deseas prestar el libro "{{ libro.titulo }}"?</p>
     <form method="POST">
-        <button type="submit">Confirmar Préstamo</button>
-        <a href="{{ url_for('index') }}">Cancelar</a>
+        <!-- Botón de confirmación -->
+        <button type="submit" class="btn btn-primary btn-prestar" data-titulo="{{ libro.titulo }}">Confirmar Préstamo</button>
+        <!-- Botón de cancelación -->
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 {% endblock %}

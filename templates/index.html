@@ -2,12 +2,34 @@
 
 {% block content %}
     <h2>Lista de Libros</h2>
-    <ul>
+
+    <!-- Mensajes Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div id="flash-messages" class="mt-4">
+                {% for category, message in messages %}
+                    <div class="flash-message alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Lista de Libros -->
+    <ul class="list-group mt-3">
         {% for libro in libros %}
-            <li>{{ libro.titulo }} - {{ libro.autor }} ({{ 'Disponible' if libro.disponible else 'Prestado' }})</li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ libro.titulo }} - {{ libro.autor }}</span>
+                <span class="badge {{ 'bg-success' if libro.disponible else 'bg-danger' }}">
+                    {{ 'Disponible' if libro.disponible else 'Prestado' }}
+                </span>
+            </li>
         {% endfor %}
     </ul>
+
     {% if current_user.is_authenticated and current_user.es_bibliotecario %}
-        <a href="{{ url_for('agregar_libro') }}">Agregar Libro</a>
+        <a href="{{ url_for('agregar_libro') }}" class="btn btn-primary mt-3">Agregar Libro</a>
     {% endif %}
 {% endblock %}
