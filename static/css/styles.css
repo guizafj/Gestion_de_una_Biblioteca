@@ -1,4 +1,4 @@
-/* Reset básico para eliminar márgenes y paddings predeterminados */
+/* Reset básico */
 * {
     margin: 0;
     padding: 0;
@@ -14,6 +14,7 @@ body {
     padding: 1rem;
 }
 
+/* Header */
 header {
     background-color: #007bff;
     color: white;
@@ -26,6 +27,7 @@ header h1 {
     margin-bottom: 0.5rem;
 }
 
+/* Navegación */
 nav {
     display: flex;
     flex-direction: column;
@@ -46,10 +48,26 @@ nav a:hover {
     background-color: #004494;
 }
 
+/* Dropdown de Bootstrap */
+.dropdown-menu {
+    background-color: #343a40; /* Fondo oscuro */
+    border: none;
+}
+
+.dropdown-item {
+    color: white;
+}
+
+.dropdown-item:hover {
+    background-color: #0056b3;
+}
+
+/* Main */
 main {
     margin-top: 1rem;
 }
 
+/* Listas */
 ul {
     list-style: none;
     padding: 0.5rem;
@@ -61,7 +79,75 @@ ul li {
     margin-bottom: 0.5rem;
 }
 
-/* Media Queries para pantallas más grandes */
+/* Formularios */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Mensajes Flash */
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.25rem;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* Media Queries */
 @media (min-width: 600px) {
     header {
         text-align: left;

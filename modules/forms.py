@@ -49,3 +49,9 @@ class AgregarLibroForm(FlaskForm):
     titulo = StringField('Título', validators=[DataRequired()])
     autor = StringField('Autor', validators=[DataRequired()])
     submit = SubmitField('Agregar Libro')
+
+class EditarLibroForm(FlaskForm):
+    isbn = StringField('ISBN', validators=[DataRequired()])
+    titulo = StringField('Título', validators=[DataRequired()])
+    autor = StringField('Autor', validators=[DataRequired()])
+    submit = SubmitField('Guardar Cambios')

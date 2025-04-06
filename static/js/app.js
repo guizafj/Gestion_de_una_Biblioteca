@@ -31,14 +31,35 @@ document.addEventListener('DOMContentLoaded', () => {
         return `¿Estás seguro de que deseas ${accion} el libro "${libroTitulo}"?`;
     });
 
-    // Validación de formularios
+    // Funciones de validación
+    function campoNoVacio(valor) {
+        return valor.trim() !== '';
+    }
+
+    function emailValido(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // Función para validar un formulario
     function validarFormulario(form, validaciones) {
         form.addEventListener('submit', function (e) {
             let valido = true;
             validaciones.forEach((validacion) => {
-                if (!validacion()) {
+                const campo = validacion.campo;
+                const valor = campo.value.trim();
+                const errorElement = document.getElementById(`${campo.id}-error`);
+
+                if (!validacion.funcion(valor)) {
                     valido = false;
-                    e.preventDefault(); // Evitar el envío del formulario
+                    e.preventDefault();
+                    if (errorElement) {
+                        errorElement.style.display = 'block';
+                    }
+                } else {
+                    if (errorElement) {
+                        errorElement.style.display = 'none';
+                    }
                 }
             });
             return valido;
@@ -49,25 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const registroForm = document.querySelector('#registro-form');
     if (registroForm) {
         validarFormulario(registroForm, [
-            () => {
-                const nombre = document.querySelector('#nombre').value.trim();
-                const email = document.querySelector('#email').value.trim();
-                const contrasena = document.querySelector('#contrasena').value.trim();
-                if (!nombre || !email || !contrasena) {
-                    alert('Por favor, completa todos los campos.');
-                    return false;
-                }
-                return true;
-            },
-            () => {
-                const email = document.querySelector('#email').value.trim();
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    alert('Por favor, ingresa un correo electrónico válido.');
-                    return false;
-                }
-                return true;
-            },
+            { campo: document.querySelector('#nombre'), funcion: campoNoVacio },
+            { campo: document.querySelector('#email'), funcion: emailValido },
+            { campo: document.querySelector('#contrasena'), funcion: campoNoVacio },
         ]);
     }
 
@@ -75,27 +80,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.querySelector('#login-form');
     if (loginForm) {
         validarFormulario(loginForm, [
-            () => {
-                const email = document.querySelector('#email').value.trim();
-                const contrasena = document.querySelector('#contrasena').value.trim();
-                if (!email || !contrasena) {
-                    alert('Por favor, completa todos los campos.');
-                    return false;
-                }
-                return true;
-            },
+            { campo: document.querySelector('#email'), funcion: campoNoVacio },
+            { campo: document.querySelector('#contrasena'), funcion: campoNoVacio },
         ]);
     }
 
     // Manejo de mensajes flash
-    const flashMessages = document.querySelectorAll('.flash-message');
+    const flashMessages = document.querySelectorAll('.alert');
     flashMessages.forEach((message) => {
         setTimeout(() => {
-            message.style.opacity = '0';
+            message.classList.add('fade');
             setTimeout(() => {
-                message.remove(); // Eliminar el mensaje del DOM
-            }, 500); // Eliminar el mensaje después de la animación
-        }, 3000); // Mostrar el mensaje durante 3 segundos
+                message.remove();
+            }, 500);
+        }, 3000);
     });
 
     // Mejora visual para campos de entrada

@@ -1,15 +1,25 @@
-from flask import render_template, redirect, url_for, flash, request
+ROLES_PERMITIDOS = {
+    'admin': ['gestionar_usuarios', 'cambiar_rol'],
+    'bibliotecario': ['agregar_libro', 'editar_libro', 'eliminar_libro', 'gestion_libros'],
+    'usuario': ['prestar', 'devolver', 'historial', 'recordatorios']
+}
+
+from flask import render_template, redirect, url_for, flash, request, send_from_directory, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from modules.models import Libro, Usuario, Prestamo
-from modules.forms import RegistroForm, LoginForm, AgregarLibroForm
-from datetime import datetime, timedelta, timezone
-from urllib.parse import urlencode  # Para construir cadenas de consulta
-from flask_mail import Message  # Para enviar correos electrónicos
+from modules.forms import RegistroForm, LoginForm, AgregarLibroForm, EditarLibroForm  # Añadir AgregarLibroForm y EditarLibroForm
+from datetime import datetime, timezone, timedelta
+from urllib.parse import urlencode
+from flask_mail import Message
 from functools import wraps
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
 from sqlalchemy.orm import joinedload
+import re
+from sqlalchemy.exc import IntegrityError
+import os 
+import urllib.parse
 
 # Configuración del límite de solicitudes
 limiter = Limiter(
@@ -22,22 +32,21 @@ logging.basicConfig(filename='app.log', level=logging.INFO)
 
 # Decorador personalizado para restringir acceso por rol
 def requiere_rol(*roles):
-    """
-    Decorador para restringir el acceso a usuarios con roles específicos.
-    Si el usuario no tiene el rol requerido, se redirige al índice con un mensaje flash.
-    """
-    def decorador(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
-                flash("Debes iniciar sesión para acceder a esta página.", "warning")
+                flash('Debe iniciar sesión para acceder.', 'warning')
                 return redirect(url_for('login'))
-            if current_user.rol not in roles:
-                flash("Acceso denegado. No tienes permiso para acceder a esta página.", "danger")
+                
+            if not any(current_user.tiene_rol(rol) for rol in roles):
+                logging.warning(f"Intento de acceso no autorizado: {current_user.email}")
+                flash('No tiene permisos para acceder a esta página.', 'danger')
                 return redirect(url_for('index'))
-            return func(*args, **kwargs)
-        return wrapper
-    return decorador
+                
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 # Función para registrar rutas
 def register_routes(app, db, mail):
@@ -45,6 +54,10 @@ def register_routes(app, db, mail):
     Registra todas las rutas de la aplicación.
     Esta función permite evitar importaciones circulares al usar el patrón "App Factory".
     """
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
     @app.route('/')
     def index():
@@ -55,64 +68,93 @@ def register_routes(app, db, mail):
         libros = Libro.query.all()
         total_libros = Libro.contar_libros()
         return render_template('index.html', libros=libros, total_libros=total_libros)
-
+    
     @app.route('/registro', methods=['GET', 'POST'])
     def registro():
-        form = RegistroForm() 
+        form = RegistroForm()
         if form.validate_on_submit():
-            # Obtener los datos del formulario
-            email = form.email.data.strip()  # Asegúrate de eliminar espacios en blanco
-            nombre = form.nombre.data.strip()
-            contrasena = form.contrasena.data
-
-            # Verificar si el correo ya está registrado
-            if Usuario.query.filter_by(email=email).first():
-                flash("El correo electrónico ya está registrado. ¿Olvidaste tu contraseña?", "warning")
-                return redirect(url_for('recuperar_cuenta'))  # Redirigir a la página de recuperación de cuenta
-
-            # Crear un nuevo usuario
             try:
+                email = form.email.data.strip()
+                
+                # Validar formato del correo
+                pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                if not re.match(pattern, email):
+                    flash("Por favor, ingresa un correo electrónico válido.", "warning")
+                    return redirect(url_for('registro'))
+
+                # Verificar si el correo ya está registrado
+                usuario_existente = Usuario.query.filter_by(email=email).first()
+                if usuario_existente:
+                    flash("El correo electrónico ya está registrado.", "danger")
+                    return redirect(url_for('registro'))
+
+                # Validar contraseña
+                if len(form.contrasena.data) < 8:
+                    flash("La contraseña debe tener al menos 8 caracteres.", "warning")
+                    return redirect(url_for('registro'))
+
                 usuario = Usuario(
-                    nombre=nombre,
-                    email=email,
+                    nombre=form.nombre.data.strip(),
+                    email=email,  # No es necesario codificar/decodificar aquí
                     rol=form.rol.data
                 )
-                usuario.set_password(contrasena)  # Hashea la contraseña
+                usuario.set_password(form.contrasena.data)
                 db.session.add(usuario)
                 db.session.commit()
 
-                # Generar token de confirmación y enviar correo
+                # Generar token y enviar correo
                 token = usuario.generar_token_confirmacion()
-                confirm_url = url_for('confirmar_email', token=token, _external=True)
-                msg = Message(
-                    subject="Confirma tu correo electrónico",
-                    recipients=[usuario.email],
-                    body=f"Haz clic en el siguiente enlace para confirmar tu correo: {confirm_url}"
-                )
-                mail.send(msg)
-                flash('Registro exitoso. Por favor, confirma tu correo electrónico.', 'success')
-                return redirect(url_for('login'))
+                try:
+                    enlace = url_for('confirmar_email', token=token, _external=True)
+                    
+                    Usuario.enviar_correo(
+                        email=usuario.email,
+                        token=token,
+                        ruta="confirmar_email",
+                        asunto="Confirma tu correo electrónico",
+                        mensaje="Haz clic en el siguiente enlace para confirmar tu correo:"
+                    )
+                    flash("Registro exitoso. Por favor, confirma tu correo electrónico.", "success")
+                    return redirect(url_for('login'))
+                except Exception as e:
+                    logging.error(f"Error al enviar correo: {e}")
+                    flash("Ocurrió un error al enviar el correo. Intenta nuevamente.", "danger")
+                    db.session.rollback()
+                    return render_template('registro.html', form=form)
+
             except Exception as e:
                 logging.error(f"Error al registrar usuario: {e}")
-                flash('Ocurrió un error al registrar el usuario. Intenta nuevamente.', 'danger')
+                flash("Ocurrió un error inesperado. Intenta nuevamente.", "danger")
+                db.session.rollback()
+                
+        return render_template('registro.html', form=form)
+
 
     @app.route('/confirmar_email/<token>')
     def confirmar_email(token):
         """
         Confirma el correo electrónico del usuario usando el token proporcionado.
-        Si el token es válido, se actualiza el estado del usuario.
         """
         try:
             usuario = Usuario.query.filter_by(token_confirmacion=token).first()
-            if not usuario or datetime.utcnow() > usuario.token_expiracion:
-                flash('El enlace de confirmación es inválido o ha expirado.', 'warning')
-                return redirect(url_for('index'))
-            usuario.confirmar_email()
-            flash('Correo electrónico confirmado correctamente. Ahora puedes iniciar sesión.', 'success')
+            if not usuario:
+                return render_template('confirmar_email.html', error='El enlace de confirmación no es válido.')
+            
+            if datetime.utcnow() > usuario.token_expiracion:
+                return render_template('confirmar_email.html', error='El enlace de confirmación ha expirado.')
+            
+            usuario.email_confirmado = True
+            usuario.token_confirmacion = None
+            usuario.token_expiracion = None
+            db.session.commit()
+            
+            flash('Tu correo electrónico ha sido confirmado correctamente.', 'success')
+            return redirect(url_for('login'))
+            
         except Exception as e:
             logging.error(f"Error al confirmar el correo: {e}")
-            flash('Ocurrió un error al confirmar el correo electrónico.', 'danger')
-        return redirect(url_for('login'))
+            return render_template('confirmar_email.html', 
+                                 error='Ha ocurrido un error al confirmar tu correo electrónico.')
 
     @app.route('/login', methods=['GET', 'POST'])
     @limiter.limit("5 per minute")  # Aplica el límite a esta ruta
@@ -121,68 +163,314 @@ def register_routes(app, db, mail):
         if form.validate_on_submit():
             usuario = Usuario.query.filter_by(email=form.email.data).first()
             if usuario:
-                # Verificar si la cuenta está bloqueada
-                if usuario.esta_bloqueada():
-                    flash('Tu cuenta está bloqueada. Inténtalo más tarde.', 'danger')
-                    logging.warning(f"Intento de inicio de sesión en cuenta bloqueada: {form.email.data}")
-                    return redirect(url_for('login'))
-                
-                  # Verificar si el correo está confirmado
-                if not usuario.email_confirmado:
-                    flash('Por favor, confirma tu correo electrónico antes de iniciar sesión.', 'info')
-                    return redirect(url_for('index'))
+                try:
+                    # Verificar si la cuenta está bloqueada
+                    if usuario.esta_bloqueada():
+                        flash('Tu cuenta está bloqueada. Inténtalo más tarde.', 'danger')
+                        logging.warning(f"Intento de inicio de sesión en cuenta bloqueada: {form.email.data}")
+                        return redirect(url_for('login'))
 
-                # Verificar la contraseña
-                if usuario.check_password(form.contrasena.data):
+                    # Verificar si el correo está confirmado
                     if not usuario.email_confirmado:
                         logging.warning(f"Intento de inicio de sesión sin confirmar: {form.email.data}")
                         flash('Por favor, confirma tu correo electrónico antes de iniciar sesión.', 'info')
                         return redirect(url_for('index'))
 
-                    # Restablecer intentos fallidos al iniciar sesión correctamente
-                    usuario.resetear_intentos_fallidos()
-                    login_user(usuario)
-                    logging.info(f"Inicio de sesión exitoso: {form.email.data}")
-                    flash('Inicio de sesión exitoso.', 'success')
-                    return redirect(url_for('index'))
+                    # Verificar la contraseña
+                    if usuario.check_password(form.contrasena.data):
+                        usuario.resetear_intentos_fallidos()
+                        login_user(usuario)
+                        logging.info(f"Inicio de sesión exitoso: {form.email.data}")
+                        flash('Inicio de sesión exitoso.', 'success')
+                        return redirect(url_for('index'))
 
-                # Incrementar intentos fallidos si la contraseña es incorrecta
-                usuario.intentos_fallidos += 1
-                db.session.commit()
-                if usuario.intentos_fallidos >= 5:  # Límite de intentos fallidos
-                    usuario.bloquear_cuenta()
-                    flash('Demasiados intentos fallidos. Tu cuenta ha sido bloqueada temporalmente.', 'danger')
+                    # Incrementar intentos fallidos si la contraseña es incorrecta
+                    usuario.intentos_fallidos += 1
+                    db.session.commit()
+                    if usuario.intentos_fallidos >= 5:  # Límite de intentos fallidos
+                        usuario.bloquear_cuenta()
+                        flash('Demasiados intentos fallidos. Tu cuenta ha sido bloqueada temporalmente.', 'danger')
                     logging.warning(f"Cuenta bloqueada: {form.email.data}")
                     return redirect(url_for('login'))
-
-            logging.warning(f"Fallo en inicio de sesión: {form.email.data}")
-            flash('Credenciales incorrectas.', 'danger')
+                except Exception as e:
+                    logging.error(f"Error al verificar la contraseña: {e}")
+                    flash('Ocurrió un error al iniciar sesión. Intenta nuevamente.', 'danger')
+            else:    
+                logging.warning(f"Fallo en inicio de sesión: {form.email.data}")
+                flash('Credenciales incorrectas.', 'danger')
         return render_template('login.html', form=form)
+
+    @app.route('/logout')
+    @login_required
+    def logout():
+        """
+        Cierra la sesión del usuario actual.
+        Redirige al índice después de cerrar la sesión.
+        """
+        logout_user()
+        flash('Sesión cerrada correctamente.', 'info')
+        return redirect(url_for('index'))
+
+    @app.route('/agregar_libro', methods=['GET', 'POST'])
+    @login_required
+    @requiere_rol('bibliotecario', 'admin')  # Solo accesible para bibliotecarios y administradores
+    def agregar_libro():
+        """
+        Permite agregar un nuevo libro a la biblioteca.
+        Solo los bibliotecarios pueden acceder a esta ruta.
+        """
+        form = form.AgregarLibroForm()
+        if form.validate_on_submit():
+            try:
+                isbn = form.isbn.data.strip()
+                titulo = form.titulo.data.strip()
+                autor = form.autor.data.strip()
+
+                # Validar ISBN (10 o 13 dígitos)
+                if not Libro.validar_isbn(isbn):
+                    flash("El ISBN debe tener 10 o 13 dígitos.", "danger")
+                    return redirect(url_for('agregar_libro'))
+
+                # Validar que el título no esté duplicado
+                if not Libro.validar_titulo(titulo):
+                    flash("Ya existe un libro con este título.", "danger")
+                    return redirect(url_for('agregar_libro'))
+
+                # Crear el nuevo libro
+                libro = Libro(
+                    isbn=isbn,
+                    titulo=titulo,
+                    autor=autor
+                )
+                db.session.add(libro)
+                db.session.commit()
+
+                flash("Libro agregado correctamente.", "success")
+                return redirect(url_for('index'))
+            except Exception as e:
+                logging.error(f"Error al agregar libro: {e}")
+                flash("Ocurrió un error al agregar el libro. Intenta nuevamente.", "danger")
+        return render_template('agregar_libro.html', form=form)
+
+
+    @app.route('/gestion_libros')
+    @login_required
+    @requiere_rol('bibliotecario', 'admin')  # Solo accesible para bibliotecarios y administradores
+    def gestion_libros():
+        """
+        Muestra una lista de libros con opciones para editar o eliminar.
+        Solo los bibliotecarios pueden acceder a esta ruta.
+        """
+        libros = Libro.query.all()
+        return render_template('gestion_libros.html', libros=libros)
+
+
+    @app.route('/editar_libro/<int:libro_id>', methods=['GET', 'POST'])
+    @login_required
+    @requiere_rol('bibliotecario', 'admin')  # Solo accesible para bibliotecarios y administradores
+    def editar_libro(libro_id):
+        """
+        Permite editar un libro específico.
+        Solo los bibliotecarios pueden acceder a esta ruta.
+        """
+        libro = Libro.query.get_or_404(libro_id)
+        form = EditarLibroForm(obj=libro)  # Inicializar el formulario con los datos del libro
+
+        if form.validate_on_submit():
+            try:
+                form.populate_obj(libro)  # Actualizar el objeto libro con los datos del formulario
+                db.session.commit()
+                flash(f'Libro "{libro.titulo}" editado correctamente.', 'success')
+                return redirect(url_for('index'))
+            except Exception as e:
+                logging.error(f"Error al editar libro: {e}")
+                flash("Ocurrió un error al editar el libro. Intenta nuevamente.", "danger")
+
+        return render_template('editar_libro.html', form=form, libro=libro)  # Pasar el formulario al template
+
+
+    @app.route('/eliminar_libro/<int:libro_id>', methods=['GET', 'POST'])
+    @login_required
+    @requiere_rol('bibliotecario', 'admin')  # Solo accesible para bibliotecarios y administradores
+    def eliminar_libro(libro_id):
+        """
+        Permite eliminar un libro específico.
+        Solo los bibliotecarios pueden acceder a esta ruta.
+        """
+        libro = Libro.query.get_or_404(libro_id)
+
+        if request.method == 'POST':
+            try:
+                db.session.delete(libro)
+                db.session.commit()
+                flash(f'Libro "{libro.titulo}" eliminado correctamente.', 'success')
+                return redirect(url_for('gestion_libros'))  # Redirigir a la página de gestión de libros
+            except Exception as e:
+                logging.error(f"Error al eliminar libro: {e}")
+                flash("Ocurrió un error al eliminar el libro. Intenta nuevamente.", "danger")
+
+        return render_template('eliminar_libro.html', libro=libro)
+
+
+    @app.route('/prestar/<int:libro_id>', methods=['GET', 'POST'])
+    @login_required
+    def prestar(libro_id):
+        """
+        Permite prestar un libro a un usuario.
+        El libro debe estar disponible para préstamo.
+        """
+        libro = Libro.query.get_or_404(libro_id)
+
+        if not libro.disponible:
+            flash('El libro no está disponible para préstamo.', 'warning')
+            return redirect(url_for('index'))
+
+        if request.method == 'POST':
+            try:
+                prestamo = Prestamo(
+                    libro_id=libro.id,
+                    usuario_id=current_user.id
+                )
+                libro.disponible = False
+                db.session.add(prestamo)
+                db.session.commit()
+
+                flash(f'Libro "{libro.titulo}" prestado correctamente.', 'success')
+                return redirect(url_for('index'))
+            except Exception as e:
+                logging.error(f"Error al prestar libro: {e}")
+                flash("Ocurrió un error al prestar el libro. Intenta nuevamente.", "danger")
+
+        return render_template('prestar_libro.html', libro=libro)
+
+
+    @app.route('/devolver/<int:libro_id>', methods=['GET', 'POST'])
+    @login_required
+    def devolver(libro_id):
+        """
+        Permite devolver un libro prestado.
+        Actualiza el estado del libro y registra la fecha de devolución.
+        """
+        libro = Libro.query.get_or_404(libro_id)
+        prestamo = Prestamo.query.filter_by(libro_id=libro.id, fecha_devolucion=None).first()
+
+        if not prestamo:
+            flash('Este libro no está prestado actualmente.', 'warning')
+            return redirect(url_for('index'))
+
+        if request.method == 'POST':
+            try:
+                prestamo.fecha_devolucion = datetime.now(timezone.utc)
+                libro.disponible = True
+                db.session.commit()
+
+                flash(f'Libro "{libro.titulo}" devuelto correctamente.', 'success')
+                return redirect(url_for('index'))
+            except Exception as e:
+                logging.error(f"Error al devolver libro: {e}")
+                flash("Ocurrió un error al devolver el libro. Intenta nuevamente.", "danger")
+
+        return render_template('devolver_libro.html', libro=libro)
     
+    @app.route('/gestion_usuarios', methods=['GET', 'POST'])
+    @login_required
+    @requiere_rol('admin')  # Solo accesible para administradores
+    def gestion_usuarios():
+        """
+        Muestra una lista de usuarios y permite al administrador gestionar sus roles.
+        Solo los administradores pueden acceder a esta ruta.
+        """
+        if request.method == 'POST':
+            try:
+                usuario_id = request.form.get('usuario_id')
+                nuevo_rol = request.form.get('rol')
+                usuario = Usuario.query.get_or_404(usuario_id)
+
+                # Validar que el rol sea válido
+                if nuevo_rol not in ['usuario', 'bibliotecario', 'admin']:
+                    flash("Rol no válido.", "danger")
+                    return redirect(url_for('gestion_usuarios'))
+
+                # Actualizar el rol del usuario
+                if nuevo_rol != usuario.rol:  # Validar si el nuevo rol es diferente al rol actual
+                    usuario.rol = nuevo_rol
+                    db.session.commit()
+                    flash(f"Rol actualizado a '{nuevo_rol}' para {usuario.nombre}.", "success")
+                else:
+                    flash("El usuario ya tiene ese rol.", "info")
+                return redirect(url_for('gestion_usuarios'))
+            except Exception as e:
+                logging.error(f"Error al actualizar rol: {e}")
+                flash("Ocurrió un error al actualizar el rol. Intenta nuevamente.", "danger")
+
+        # Mostrar la lista de usuarios
+        usuarios = Usuario.query.all()
+        return render_template('gestion_usuarios.html', usuarios=usuarios)
+
+
+    @app.route('/recordatorios')
+    @login_required
+    def recordatorios():
+        """
+        Muestra recordatorios de préstamos pendientes.
+        Incluye préstamos con más de 7 días sin devolución.
+        """
+        try:
+            fecha_limite = datetime.now(timezone.utc) - timedelta(days=7)
+            prestamos_pendientes = Prestamo.query.options(joinedload(Prestamo.libro)).filter(
+                Prestamo.usuario_id == current_user.id,
+                Prestamo.fecha_devolucion.is_(None),
+                Prestamo.fecha_prestamo < fecha_limite
+            ).all()
+
+            return render_template('recordatorios.html', prestamos_pendientes=prestamos_pendientes)
+        except Exception as e:
+            logging.error(f"Error al cargar recordatorios: {e}")
+            flash("Ocurrió un error al cargar los recordatorios. Intenta nuevamente.", "danger")
+            return redirect(url_for('index'))
+
+
+    @app.route('/historial')
+    @login_required
+    def historial():
+        """
+        Muestra el historial de préstamos del usuario actual.
+        Incluye todos los préstamos realizados por el usuario.
+        """
+        try:
+            prestamos = Prestamo.query.options(joinedload(Prestamo.libro)).filter_by(usuario_id=current_user.id).all()
+            params = {'usuario_id': current_user.id, 'total_prestamos': len(prestamos)}
+            query_string = urlencode(params)
+            return render_template('historial.html', prestamos=prestamos, query_string=query_string)
+        except Exception as e:
+            logging.error(f"Error al cargar historial: {e}")
+            flash("Ocurrió un error al cargar el historial. Intenta nuevamente.", "danger")
+            return redirect(url_for('index'))
+        
     @app.route('/recuperar_cuenta', methods=['GET', 'POST'])
     def recuperar_cuenta():
         """
         Permite a los usuarios solicitar un enlace para restablecer su contraseña.
         """
         if request.method == 'POST':
-            email = request.form.get('email').strip()
-
-            # Validar formato del correo
-            if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-                flash("Por favor, ingresa un correo electrónico válido.", "warning")
-                return redirect(url_for('recuperar_cuenta'))
-
-            # Verificar si el correo está registrado
-            usuario = Usuario.query.filter_by(email=email).first()
-            if not usuario:
-                flash("El correo electrónico no está registrado.", "warning")
-                return redirect(url_for('recuperar_cuenta'))
-
-            # Generar un token de recuperación
-            token = usuario.generar_token_confirmacion()
-
-            # Enviar un correo con el enlace de recuperación
             try:
+                email = request.form.get('email').strip()
+
+                # Validar formato del correo electrónico
+                pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                if not email or not re.match(pattern, email):
+                    flash("Por favor, ingresa un correo electrónico válido.", "warning")
+                    return redirect(url_for('recuperar_cuenta'))
+
+                usuario = Usuario.query.filter_by(email=email).first()
+                if not usuario:
+                    flash("El correo electrónico no está registrado.", "warning")
+                    return redirect(url_for('recuperar_cuenta'))
+
+                # Generar token y enviar correo
+                token = usuario.generar_token_confirmacion()
+                enlace = url_for('restablecer_contrasena', token=token, _external=True)
+
                 Usuario.enviar_correo(
                     email=usuario.email,
                     token=token,
@@ -191,12 +479,15 @@ def register_routes(app, db, mail):
                     mensaje="Para restablecer tu contraseña, haz clic en el siguiente enlace:"
                 )
                 flash("Se ha enviado un enlace de recuperación a tu correo electrónico.", "info")
+                return redirect(url_for('login'))
+
             except Exception as e:
-                logging.error(f"Error al enviar el correo de recuperación: {e}")
-                flash("Ocurrió un error al enviar el correo. Intenta nuevamente más tarde.", "danger")
+                logging.error(f"Error en recuperación de cuenta: {e}")
+                flash("Ocurrió un error. Por favor, intenta nuevamente.", "danger")
 
         return render_template('recuperar_cuenta.html')
-    
+
+
     @app.route('/restablecer_contrasena/<token>', methods=['GET', 'POST'])
     def restablecer_contrasena(token):
         """
@@ -223,6 +514,7 @@ def register_routes(app, db, mail):
                 usuario.token_confirmacion = None  # Eliminar el token después de usarlo
                 usuario.token_expiracion = None
                 db.session.commit()
+
                 flash("Tu contraseña ha sido restablecida con éxito. Ahora puedes iniciar sesión.", "success")
                 return redirect(url_for('login'))
             except Exception as e:
@@ -231,202 +523,82 @@ def register_routes(app, db, mail):
 
         return render_template('restablecer_contrasena.html', token=token)
 
-    @app.route('/logout')
-    @login_required
-    def logout():
-        """
-        Cierra la sesión del usuario actual.
-        Redirige al índice después de cerrar la sesión.
-        """
-        logout_user()
-        flash('Sesión cerrada correctamente.', 'info')
-        return redirect(url_for('index'))
 
-    @app.route('/gestion_usuarios', methods=['GET', 'POST'])
+    @app.route('/gestionar_usuarios', methods=['GET', 'POST'])
     @login_required
     @requiere_rol('admin')
-    def gestion_usuarios():
+    def gestionar_usuarios():
         """
-        Muestra una lista de usuarios y permite al administrador gestionar sus roles.
+        Gestiona usuarios y sus roles.
+        Solo accesible para administradores.
         """
         if request.method == 'POST':
-            # Procesar el cambio de rol
-            usuario_id = request.form.get('usuario_id')
-            nuevo_rol = request.form.get('rol')
-            usuario = Usuario.query.get_or_404(usuario_id)
-            if nuevo_rol in ['usuario', 'bibliotecario', 'admin']:
+            try:
+                usuario_id = request.form.get('usuario_id')
+                nuevo_rol = request.form.get('rol')
+                usuario = Usuario.query.get_or_404(usuario_id)
+
+                if nuevo_rol not in Usuario.ROLES:
+                    flash("Rol no válido.", "danger")
+                    return redirect(url_for('gestionar_usuarios'))
+
                 usuario.rol = nuevo_rol
                 db.session.commit()
-                flash(f"Rol actualizado a '{nuevo_rol}' para el usuario {usuario.nombre}.", 'success')
-            else:
-                flash("Rol no válido.", 'danger')
-            return redirect(url_for('gestion_usuarios'))
+                flash(f"Rol actualizado a '{nuevo_rol}' para {usuario.nombre}.", "success")
+                
+            except Exception as e:
+                logging.error(f"Error al actualizar rol: {e}")
+                flash("Error al actualizar rol.", "danger")
+                db.session.rollback()
 
-        # Mostrar la lista de usuarios
         usuarios = Usuario.query.all()
-        return render_template('gestion_usuarios.html', usuarios=usuarios)
+        return render_template('gestionar_usuarios.html', usuarios=usuarios)
 
-    @app.route('/buscar', methods=['GET'])
-    def buscar():
-        """
-        Permite buscar libros por título, autor o ISBN.
-        Muestra los resultados de la búsqueda o un mensaje si no hay coincidencias.
-        """
-        query = request.args.get('query', '').strip()
-        if not query:
-            flash('Por favor, ingresa un término de búsqueda.', 'warning')
-            return redirect(url_for('index'))
-
-        libros = Libro.query.filter(
-            (Libro.titulo.ilike(f"%{query}%")) |
-            (Libro.autor.ilike(f"%{query}%")) |
-            (Libro.isbn == query)
-        ).all()
-
-        if not libros:
-            flash('No se encontraron resultados para tu búsqueda.', 'info')
-
-        params = {'query': query}
-        query_string = urlencode(params)
-        return render_template('buscar_libro.html', libros=libros, query=query, query_string=query_string)
-
-    @app.route('/agregar_libro', methods=['GET', 'POST'])
+    @app.route('/cambiar_rol/<int:usuario_id>', methods=['POST'])
     @login_required
-    @requiere_rol('bibliotecario', 'admin')
-    def agregar_libro():
+    @requiere_rol('admin')
+    def cambiar_rol(usuario_id):
         """
-        Permite agregar un nuevo libro a la biblioteca.
-        Solo los bibliotecarios pueden acceder a esta ruta.
+        Cambia el rol de un usuario específico.
+        Args:
+            usuario_id (int): ID del usuario a modificar
         """
-        form = AgregarLibroForm()
-        if form.validate_on_submit():
-            libro = Libro(
-                isbn=form.isbn.data.strip(),
-                titulo=form.titulo.data.strip(),
-                autor=form.autor.data.strip()
-            )
-            db.session.add(libro)
+        try:
+            usuario = Usuario.query.get_or_404(usuario_id)
+            nuevo_rol = request.form.get('rol')
+            
+            if nuevo_rol not in Usuario.ROLES:
+                flash("Rol no válido.", "danger")
+                return redirect(url_for('gestionar_usuarios'))
+            
+            # Evitar que un admin se quite sus propios privilegios
+            if usuario.id == current_user.id and usuario.es_admin():
+                flash("No puedes modificar tu propio rol de administrador.", "danger")
+                return redirect(url_for('gestionar_usuarios'))
+                
+            usuario.rol = nuevo_rol
             db.session.commit()
-            flash('Libro agregado correctamente.', 'success')
-            return redirect(url_for('index'))
-        return render_template('agregar_libro.html', form=form)
-
-    @app.route('/gestion_libros')
-    @login_required
-    @requiere_rol('bibliotecario', 'admin')
-    def gestion_libros():
-        """
-        Muestra una lista de libros con opciones para editar o eliminar.
-        Solo los bibliotecarios pueden acceder a esta ruta.
-        """
-        libros = Libro.query.all()
-        return render_template('gestion_libros.html', libros=libros)
-
-    @app.route('/editar_libro/<int:libro_id>', methods=['GET', 'POST'])
-    @login_required
-    @requiere_rol('bibliotecario', 'admin')
-    def editar_libro(libro_id):
-        """
-        Permite editar un libro específico.
-        Solo los bibliotecarios pueden acceder a esta ruta.
-        """
-        libro = Libro.query.get_or_404(libro_id)
-        if request.method == 'POST':
-            libro.titulo = request.form['titulo'].strip()
-            libro.autor = request.form['autor'].strip()
-            libro.isbn = request.form['isbn'].strip()
-            db.session.commit()
-            flash(f'Libro "{libro.titulo}" editado correctamente.', 'success')
-            return redirect(url_for('index'))
-        return render_template('editar_libro.html', libro=libro)
-
-    @app.route('/eliminar_libro/<int:libro_id>', methods=['GET', 'POST'])
-    @login_required
-    @requiere_rol('bibliotecario', 'admin')
-    def eliminar_libro(libro_id):
-        """
-        Permite eliminar un libro específico.
-        Solo los bibliotecarios pueden acceder a esta ruta.
-        """
-        libro = Libro.query.get_or_404(libro_id)
-        if request.method == 'POST':
-            db.session.delete(libro)
-            db.session.commit()
-            flash(f'Libro "{libro.titulo}" eliminado correctamente.', 'success')
-            return redirect(url_for('index'))
-        return render_template('eliminar_libro.html', libro=libro)
-
-    @app.route('/prestar/<int:libro_id>', methods=['GET', 'POST'])
-    @login_required
-    def prestar(libro_id):
-        """
-        Permite prestar un libro a un usuario.
-        El libro debe estar disponible para préstamo.
-        """
-        libro = Libro.query.get_or_404(libro_id)
-        if not libro.disponible:
-            flash('El libro no está disponible para préstamo.', 'warning')
-            return redirect(url_for('index'))
-
-        if request.method == 'POST':
-            prestamo = Prestamo(libro_id=libro.id, usuario_id=current_user.id)
-            libro.disponible = False
-            db.session.add(prestamo)
-            db.session.commit()
-            flash(f'Libro "{libro.titulo}" prestado correctamente.', 'success')
-            return redirect(url_for('index'))
-        return render_template('prestar_libro.html', libro=libro)
-
-    @app.route('/devolver/<int:libro_id>', methods=['GET', 'POST'])
-    @login_required
-    def devolver(libro_id):
-        """
-        Permite devolver un libro prestado.
-        Actualiza el estado del libro y registra la fecha de devolución.
-        """
-        libro = Libro.query.get_or_404(libro_id)
-        prestamo = Prestamo.query.filter_by(libro_id=libro.id, fecha_devolucion=None).first()
-        if not prestamo:
-            flash('Este libro no está prestado actualmente.', 'warning')
-            return redirect(url_for('index'))
-
-        if request.method == 'POST':
-            prestamo.fecha_devolucion = datetime.now(timezone.utc)
-            libro.disponible = True
-            db.session.commit()
-            flash(f'Libro "{libro.titulo}" devuelto correctamente.', 'success')
-            return redirect(url_for('index'))
-        return render_template('devolver_libro.html', libro=libro)
-
-    @app.route('/recordatorios')
-    @login_required
-    def recordatorios():
-        """
-        Muestra recordatorios de préstamos pendientes.
-        Incluye préstamos con más de 7 días sin devolución.
-        """
-        fecha_limite = datetime.now(timezone.utc) - timedelta(days=7)
-        prestamos_pendientes = Prestamo.query.options(joinedload(Prestamo.libro)).filter(
-            Prestamo.usuario_id == current_user.id,
-            Prestamo.fecha_devolucion.is_(None),
-            Prestamo.fecha_prestamo < fecha_limite
-        ).all()
-
-        params = {'usuario_id': current_user.id, 'pendientes': len(prestamos_pendientes)}
-        query_string = urlencode(params)
-        return render_template('recordatorios.html', prestamos_pendientes=prestamos_pendientes, query_string=query_string)
-
-    @app.route('/historial')
-    @login_required
-    def historial():
-        """
-        Muestra el historial de préstamos del usuario actual.
-        """
-        prestamos = Prestamo.query.options(joinedload(Prestamo.libro)).filter_by(usuario_id=current_user.id).all()
-        params = {'usuario_id': current_user.id, 'total_prestamos': len(prestamos)}
-        query_string = urlencode(params)
-        return render_template('historial.html', prestamos=prestamos, query_string=query_string)
+            flash(f"Rol actualizado correctamente para {usuario.nombre}.", "success")
+            
+        except Exception as e:
+            logging.error(f"Error al cambiar rol: {e}")
+            flash("Error al cambiar el rol.", "danger")
+            db.session.rollback()
+            
+        return redirect(url_for('gestionar_usuarios'))
 
     @app.errorhandler(404)
     def pagina_no_encontrada(error):
+        """
+        Maneja errores 404 (página no encontrada).
+        """
         return render_template('error.html', mensaje="La página solicitada no existe."), 404
+
+
+    @app.errorhandler(500)
+    def error_interno_servidor(error):
+        """
+        Maneja errores 500 (errores internos del servidor).
+        """
+        logging.error(f"Error interno del servidor: {error}")
+        return render_template('error.html', mensaje="Ha ocurrido un error inesperado. Por favor, intenta nuevamente más tarde."), 500

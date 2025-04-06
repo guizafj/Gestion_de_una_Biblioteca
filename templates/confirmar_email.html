@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+        <h1>Confirmación de Correo Electrónico</h1>
+        {% if mensaje %}
+            <div class="alert alert-success">{{ mensaje }}</div>
+        {% elif error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+    </div>
+{% endblock %}

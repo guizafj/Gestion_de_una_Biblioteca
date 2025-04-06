@@ -5,17 +5,21 @@ import secrets
 from extensions import db, mail
 import bcrypt
 from sqlalchemy.orm import validates
-from flask import url_for
+from flask import url_for, current_app
 from flask_mail import Message
+import logging
+import urllib.parse  # Añadir esta importación
+
+logging.basicConfig(filename='app.log', level=logging.INFO)
 
 class Libro(db.Model):
     """
     Representa un libro en la biblioteca.
     """
     id = db.Column(db.Integer, primary_key=True)
-    isbn = db.Column(db.String(20), unique=True, nullable=False index=True) # Índice para ISBN
-    titulo = db.Column(db.String(100), nullable=False index=True) # Índice para título
-    autor = db.Column(db.String(100), nullable=False index=True) # Índice para autor
+    isbn = db.Column(db.String(20), unique=True, nullable=False, index=True) # Índice para ISBN
+    titulo = db.Column(db.String(100), nullable=False, index=True) # Índice para título
+    autor = db.Column(db.String(100), nullable=False, index=True) # Índice para autor
     disponible = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
@@ -63,6 +67,13 @@ class Usuario(UserMixin, db.Model):
     token_confirmacion = db.Column(db.String(100), nullable=True)
     intentos_fallidos = db.Column(db.Integer, default=0)
     cuenta_bloqueada_hasta = db.Column(db.DateTime, nullable=True)
+    token_expiracion = db.Column(db.DateTime, nullable=True)
+
+    ROLES = {
+        'usuario': 'Usuario regular',
+        'bibliotecario': 'Bibliotecario',
+        'admin': 'Administrador'
+    }
 
     def __repr__(self):
         return f"<Usuario {self.nombre} ({self.rol})>"
@@ -118,45 +129,92 @@ class Usuario(UserMixin, db.Model):
     def generar_token_confirmacion(self, expiracion=3600):
         """
         Genera un token único para confirmar el correo electrónico del usuario.
+        Args:
+            expiracion (int): Tiempo en segundos hasta que expire el token
+        Returns:
+            str: Token generado
         """
-        self.token_confirmacion = secrets.token_urlsafe(32).encode('utf-8').decode('utf-8')  # Asegura UTF-8
-        self.token_expiracion = datetime.utcnow() + timedelta(seconds=expiracion)
-        db.session.commit()
-        return self.token_confirmacion
+        try:
+            self.token_confirmacion = secrets.token_urlsafe(32)
+            self.token_expiracion = datetime.utcnow() + timedelta(seconds=expiracion)
+            db.session.commit()
+            logging.info(f"Token generado para usuario {self.email}")
+            return self.token_confirmacion
+        except Exception as e:
+            error_msg = f"Error al generar token: {str(e)}"
+            logging.error(error_msg)
+            raise ValueError(error_msg)
+    
+    @staticmethod
+    def enviar_correo(email, token, ruta, asunto, mensaje):
+        try:
+            with current_app.app_context():
+                # Generar y decodificar la URL
+                enlace = url_for('confirmar_email', token=token, _external=True)
+                enlace = urllib.parse.unquote(enlace)
+                
+                msg = Message(
+                    subject=asunto,
+                    recipients=[email],
+                    sender=current_app.config['MAIL_DEFAULT_SENDER']
+                )
+                
+                # Plantilla HTML mejorada
+                msg.html = f"""
+                <!DOCTYPE html>
+                <html lang="es">
+                    <head>
+                        <meta charset="utf-8">
+                    </head>
+                    <body>
+                        <p>{mensaje}</p>
+                        <a href="{enlace}">Confirmar correo electrónico</a>
+                        <p>Si el enlace no funciona, copia y pega esta URL:</p>
+                        <p>{enlace}</p>
+                    </body>
+                </html>
+                """
+                
+                msg.body = f"{mensaje}\n\nPara confirmar tu correo, visita: {enlace}"
+                mail.send(msg)
+                logging.info(f"Correo enviado exitosamente a {email}")
+                
+        except Exception as e:
+            error_msg = f"Error al enviar correo a {email}: {str(e)}"
+            logging.error(error_msg)
+            raise ValueError(error_msg)
 
     def confirmar_email(self):
         """
-        Marca el correo del usuario como confirmado y elimina el token de confirmación.
+        Marca el correo del usuario como confirmado y elimina el token.
+        Raises:
+            ValueError: Si el token no es válido o ha expirado
         """
-        if not self.token_expiracion:
-            raise ValueError("El token de confirmación no es válido o ya ha sido utilizado.")
-        if datetime.utcnow() > self.token_expiracion:
-            raise ValueError("El token ha expirado.")
-        self.email_confirmado = True
-        self.token_confirmacion = None
-        self.token_expiracion = None
-        db.session.commit()
+        try:
+            if not self.token_confirmacion or not self.token_expiracion:
+                raise ValueError("El token de confirmación no es válido o ya ha sido utilizado.")
+            
+            if datetime.utcnow() > self.token_expiracion:
+                raise ValueError("El token ha expirado.")
+            
+            self.email_confirmado = True
+            self.token_confirmacion = None
+            self.token_expiracion = None
+            db.session.commit()
+            logging.info(f"Email confirmado para usuario {self.email}")
+            
+        except Exception as e:
+            error_msg = f"Error al confirmar email: {str(e)}"
+            logging.error(error_msg)
+            db.session.rollback()
+            raise ValueError(error_msg)
 
     def correo_confirmado(self):
         """
         Verifica si el correo electrónico del usuario ha sido confirmado.
         """
         return self.email_confirmado and self.token_confirmacion is None
-    
-    @staticmethod
-    def enviar_correo(email, token, ruta, asunto, mensaje):
-        """
-        Envía un correo electrónico con un enlace generado dinámicamente.
-        """
-        try:
-            enlace = url_for(ruta, token=token, _external=True)
-            msg = Message(asunto, recipients=[email])
-            msg.body = f"{mensaje}\n\n{enlace}"
-            mail.send(msg)
-        except Exception as e:
-            logging.error(f"Error al enviar correo a {email}: {e}")
-            raise ValueError("Ocurrió un error al enviar el correo. Intenta nuevamente.")
-    
+       
     @classmethod
     def crear_usuario(cls, nombre, email, contrasena, rol='usuario'):
         """
@@ -175,8 +233,24 @@ class Usuario(UserMixin, db.Model):
     def tiene_rol(self, rol):
         """
         Verifica si el usuario tiene un rol específico.
+        Args:
+            rol (str): Rol a verificar ('usuario', 'bibliotecario', 'admin')
+        Returns:
+            bool: True si el usuario tiene el rol, False en caso contrario
         """
         return self.rol == rol
+
+    def es_admin(self):
+        """Verifica si el usuario es administrador"""
+        return self.tiene_rol('admin')
+    
+    def es_bibliotecario(self):
+        """Verifica si el usuario es bibliotecario"""
+        return self.tiene_rol('bibliotecario')
+    
+    def es_usuario_regular(self):
+        """Verifica si el usuario es un usuario regular"""
+        return self.tiene_rol('usuario')
 
     def bloquear_cuenta(self, duracion_bloqueo=300):
         """
