@@ -82,7 +82,9 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 
     Implementar notificaciones automáticas para recordatorios de devolución.
     Añadir pruebas unitarias para mejorar la calidad del código.
-    Migrar a una base de datos más robusta como PostgreSQL para producción.
+    Se esta migrando actualmente a MySQL la base de datos
+    Agregar la variable de cantidad en el modelo de libro
+    Se cambiara la forma de prestar libros, el usuario registrado podra reservarlo, mas no crear un prestamos, ya que eso es una función del bibliotecario
      
 
 ## 🤝 Contribuciones
