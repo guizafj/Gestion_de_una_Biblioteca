@@ -5,10 +5,10 @@ import secrets
 from extensions import db, mail
 import bcrypt
 from sqlalchemy.orm import validates
-from flask import url_for, current_app
+from flask import url_for, current_app, render_template
 from flask_mail import Message
 import logging
-import urllib.parse  # Añadir esta importación
+import urllib.parse  # Añadir esta importación 
 
 logging.basicConfig(filename='app.log', level=logging.INFO)
 
@@ -146,39 +146,37 @@ class Usuario(UserMixin, db.Model):
             raise ValueError(error_msg)
     
     @staticmethod
-    def enviar_correo(email, token, ruta, asunto, mensaje):
+    def enviar_correo(email, token, ruta, asunto, mensaje, plantilla):
+        """
+        Envía un correo electrónico utilizando una plantilla HTML.
+        Args:
+            email (str): Dirección de correo del destinatario.
+            token (str): Token único para el enlace.
+            ruta (str): Nombre de la ruta Flask para generar el enlace.
+            asunto (str): Asunto del correo.
+            mensaje (str): Mensaje adicional para el correo.
+            plantilla (str): Nombre del archivo de plantilla HTML.
+        """
         try:
             with current_app.app_context():
-                # Generar y decodificar la URL
-                enlace = url_for('confirmar_email', token=token, _external=True)
-                enlace = urllib.parse.unquote(enlace)
+                # Generar el enlace
+                enlace = url_for(ruta, token=token, _external=True)
                 
+                # Renderizar la plantilla
+                cuerpo_html = render_template(f"emails/{plantilla}", mensaje=mensaje, enlace=enlace)
+                
+                # Crear el mensaje
                 msg = Message(
                     subject=asunto,
                     recipients=[email],
                     sender=current_app.config['MAIL_DEFAULT_SENDER']
                 )
-                
-                # Plantilla HTML mejorada
-                msg.html = f"""
-                <!DOCTYPE html>
-                <html lang="es">
-                    <head>
-                        <meta charset="utf-8">
-                    </head>
-                    <body>
-                        <p>{mensaje}</p>
-                        <a href="{enlace}">Confirmar correo electrónico</a>
-                        <p>Si el enlace no funciona, copia y pega esta URL:</p>
-                        <p>{enlace}</p>
-                    </body>
-                </html>
-                """
-                
+                msg.html = cuerpo_html
                 msg.body = f"{mensaje}\n\nPara confirmar tu correo, visita: {enlace}"
+                
+                # Enviar el correo
                 mail.send(msg)
                 logging.info(f"Correo enviado exitosamente a {email}")
-                
         except Exception as e:
             error_msg = f"Error al enviar correo a {email}: {str(e)}"
             logging.error(error_msg)
@@ -214,7 +212,17 @@ class Usuario(UserMixin, db.Model):
         Verifica si el correo electrónico del usuario ha sido confirmado.
         """
         return self.email_confirmado and self.token_confirmacion is None
-       
+    
+    def limitador_inicio(self):
+        """
+        Verifica si el usuario ha excedido el límite de intentos fallidos y bloquea la cuenta si es necesario.
+        """
+        if self.intentos_fallidos >= 5:  # Límite de intentos fallidos
+            self.bloquear_cuenta()  # Bloquea la cuenta utilizando el método existente
+            logging.warning(f"Cuenta bloqueada: {self.email}")
+            return True  # Indica que la cuenta ha sido bloqueada
+        return False  # Indica que la cuenta no está bloqueada
+
     @classmethod
     def crear_usuario(cls, nombre, email, contrasena, rol='usuario'):
         """
@@ -228,7 +236,35 @@ class Usuario(UserMixin, db.Model):
             rol=rol
         )
         usuario.set_password(contrasena)  # Usar el método set_password para establecer el hash
+
+        Usuario.enviar_correo(
+            email=usuario.email,
+            token=usuario.generar_token_confirmacion(),
+            ruta="confirmar_email",
+            asunto="Confirmación de correo electrónico",
+            mensaje="Por favor, confirma tu correo electrónico haciendo clic en el siguiente enlace:",
+            plantilla="confirmar_email.html"
+        )
+
         return usuario
+
+    @classmethod
+    def restablecer_contrasena(cls, email):
+        """
+        Envía un correo electrónico para restablecer la contraseña del usuario.
+        """
+        usuario = cls.query.filter_by(email=email).first()
+        if not usuario:
+            raise ValueError("No se encontró un usuario con ese correo electrónico.")
+
+        Usuario.enviar_correo(
+            email=usuario.email,
+            token=usuario.generar_token_confirmacion(),
+            ruta="restablecer_contrasena",
+            asunto="Restablecimiento de contraseña",
+            mensaje="Para restablecer tu contraseña, haz clic en el siguiente enlace:",
+            plantilla="restablecer_contrasena.html"
+        )
 
     def tiene_rol(self, rol):
         """

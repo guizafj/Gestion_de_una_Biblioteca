@@ -21,11 +21,6 @@ from sqlalchemy.exc import IntegrityError
 import os 
 import urllib.parse
 
-# Configuración del límite de solicitudes
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["5 per minute"]  # Limita a 5 intentos por minuto
-)
 
 # Configuración del logging
 logging.basicConfig(filename='app.log', level=logging.INFO)
@@ -89,8 +84,8 @@ def register_routes(app, db, mail):
                     return redirect(url_for('registro'))
 
                 # Validar contraseña
-                if len(form.contrasena.data) < 8:
-                    flash("La contraseña debe tener al menos 8 caracteres.", "warning")
+                if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$', form.contrasena.data):
+                    flash("La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.", "warning")
                     return redirect(url_for('registro'))
 
                 usuario = Usuario(
@@ -157,47 +152,29 @@ def register_routes(app, db, mail):
                                  error='Ha ocurrido un error al confirmar tu correo electrónico.')
 
     @app.route('/login', methods=['GET', 'POST'])
-    @limiter.limit("5 per minute")  # Aplica el límite a esta ruta
     def login():
         form = LoginForm()
         if form.validate_on_submit():
             usuario = Usuario.query.filter_by(email=form.email.data).first()
             if usuario:
-                try:
-                    # Verificar si la cuenta está bloqueada
-                    if usuario.esta_bloqueada():
-                        flash('Tu cuenta está bloqueada. Inténtalo más tarde.', 'danger')
-                        logging.warning(f"Intento de inicio de sesión en cuenta bloqueada: {form.email.data}")
-                        return redirect(url_for('login'))
+                if usuario.esta_bloqueada():
+                    flash('Tu cuenta está bloqueada temporalmente. Intenta más tarde.', 'danger')
+                    return redirect(url_for('login'))
 
-                    # Verificar si el correo está confirmado
-                    if not usuario.email_confirmado:
-                        logging.warning(f"Intento de inicio de sesión sin confirmar: {form.email.data}")
-                        flash('Por favor, confirma tu correo electrónico antes de iniciar sesión.', 'info')
-                        return redirect(url_for('index'))
-
-                    # Verificar la contraseña
-                    if usuario.check_password(form.contrasena.data):
-                        usuario.resetear_intentos_fallidos()
-                        login_user(usuario)
-                        logging.info(f"Inicio de sesión exitoso: {form.email.data}")
-                        flash('Inicio de sesión exitoso.', 'success')
-                        return redirect(url_for('index'))
-
-                    # Incrementar intentos fallidos si la contraseña es incorrecta
+                if usuario.check_password(form.contrasena.data):
+                    usuario.resetear_intentos_fallidos()
+                    login_user(usuario)
+                    flash('Inicio de sesión exitoso.', 'success')
+                    return redirect(url_for('index'))
+                else:
                     usuario.intentos_fallidos += 1
                     db.session.commit()
-                    if usuario.intentos_fallidos >= 5:  # Límite de intentos fallidos
-                        usuario.bloquear_cuenta()
+                    if usuario.limitador_inicio():
                         flash('Demasiados intentos fallidos. Tu cuenta ha sido bloqueada temporalmente.', 'danger')
-                    logging.warning(f"Cuenta bloqueada: {form.email.data}")
-                    return redirect(url_for('login'))
-                except Exception as e:
-                    logging.error(f"Error al verificar la contraseña: {e}")
-                    flash('Ocurrió un error al iniciar sesión. Intenta nuevamente.', 'danger')
-            else:    
-                logging.warning(f"Fallo en inicio de sesión: {form.email.data}")
-                flash('Credenciales incorrectas.', 'danger')
+                    else:
+                        flash('Credenciales incorrectas. Intenta nuevamente.', 'warning')
+            else:
+                flash('No se encontró una cuenta con ese correo electrónico.', 'danger')
         return render_template('login.html', form=form)
 
     @app.route('/logout')
@@ -219,7 +196,7 @@ def register_routes(app, db, mail):
         Permite agregar un nuevo libro a la biblioteca.
         Solo los bibliotecarios pueden acceder a esta ruta.
         """
-        form = form.AgregarLibroForm()
+        form = AgregarLibroForm()
         if form.validate_on_submit():
             try:
                 isbn = form.isbn.data.strip()

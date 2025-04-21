@@ -1,4 +1,4 @@
-from app import create_app
+from main import create_app
 from extensions import db, mail
 from modules.models import Usuario
 from flask_mail import Message

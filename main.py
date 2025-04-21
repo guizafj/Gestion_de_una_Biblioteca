@@ -21,7 +21,16 @@ def create_app(testing=False):
         testing (bool): Si es True, usa configuración para pruebas
     """
     app = Flask(__name__)
-    app.config.from_object(Config)
+    if testing:
+        app.config.from_object('tests.config_test.TestConfig')  # Configuración de pruebas
+    else:
+        app.config.from_object(Config)
+    
+    # Validar configuraciones críticas
+    if not app.config.get('SECRET_KEY'):
+        raise ValueError("SECRET_KEY no está configurado.")
+    if not app.config.get('SQLALCHEMY_DATABASE_URI'):
+        raise ValueError("SQLALCHEMY_DATABASE_URI no está configurado.")
     
     # Configuración base de URLs
     if not testing:
@@ -64,6 +73,14 @@ def initialize_extensions(app):
     # Deshabilitar strict_slashes
     app.url_map.strict_slashes = False
 
+# Crear la aplicación en el nivel superior
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(host='127.0.0.1', port=5000, debug=True)
+    with app.app_context():
+        try:
+            db.engine.execute('SELECT 1')
+            print("Conexión a MySQL exitosa.")
+        except Exception as e:
+            print(f"Error al conectar a MySQL: {e}")

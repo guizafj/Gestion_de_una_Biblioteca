@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmación de Correo Electrónico</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f9f9f9; margin: 0; padding: 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border: 1px solid #ddd; padding: 20px; border-radius: 5px;">
+                    <tr>
+                        <td align="center" style="padding: 10px 0;">
+                            <h1 style="color: #007bff; font-size: 24px;">Confirmación de Correo Electrónico</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 0; color: #333;">
+                            <p>{{ mensaje }}</p>
+                            <p>
+                                <a href="{{ enlace }}" style="display: inline-block; background-color: #007bff; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-size: 16px;">
+                                    Confirmar correo electrónico
+                                </a>
+                            </p>
+                            <p>Si el enlace no funciona, copia y pega esta URL en tu navegador:</p>
+                            <p style="word-break: break-word; color: #007bff;">{{ enlace }}</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding: 10px 0; font-size: 12px; color: #999;">
+                            <p>© 2025 Biblioteca. Todos los derechos reservados.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
