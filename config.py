@@ -10,15 +10,16 @@ class Config:
     """
 
     # Configuración de la base de datos
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
-    if not SQLALCHEMY_DATABASE_URI:
-        raise ValueError("La variable SQLALCHEMY_DATABASE_URI no está configurada.")
-    # Asegurarse de que la base de datos use UTF-8 (para MySQL/MariaDB)
-    if 'mysql' in SQLALCHEMY_DATABASE_URI and 'charset' not in SQLALCHEMY_DATABASE_URI:
-        SQLALCHEMY_DATABASE_URI += '?charset=utf8mb4'
+    SECRET_KEY = os.getenv('SECRET_KEY', 'defaultsecretkey')
+    SQLALCHEMY_DATABASE_URI = (
+        f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}"
+        f"@{os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}/{os.getenv('MYSQL_DB')}"
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    DEBUG = os.getenv('FLASK_ENV') == 'development'
 
     # Clave secreta para la aplicación
-    SECRET_KEY = os.getenv('SECRET_KEY')
+    SECRET_KEY = os.getenv('SECRET_KEY', 'defaultsecretkey')
     if not SECRET_KEY:
         raise ValueError("La variable SECRET_KEY no está configurada.")
     
@@ -46,3 +47,4 @@ class Config:
 
     # Configuración de SQLAlchemy
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # Desactiva el seguimiento de modificaciones para mejorar el rendimiento
+

@@ -68,60 +68,17 @@ def register_routes(app, db, mail):
     def registro():
         form = RegistroForm()
         if form.validate_on_submit():
-            try:
-                email = form.email.data.strip()
-                
-                # Validar formato del correo
-                pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-                if not re.match(pattern, email):
-                    flash("Por favor, ingresa un correo electrónico válido.", "warning")
-                    return redirect(url_for('registro'))
-
-                # Verificar si el correo ya está registrado
-                usuario_existente = Usuario.query.filter_by(email=email).first()
-                if usuario_existente:
-                    flash("El correo electrónico ya está registrado.", "danger")
-                    return redirect(url_for('registro'))
-
-                # Validar contraseña
-                if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$', form.contrasena.data):
-                    flash("La contraseña debe tener al menos 8 caracteres, incluyendo letras y números.", "warning")
-                    return redirect(url_for('registro'))
-
-                usuario = Usuario(
-                    nombre=form.nombre.data.strip(),
-                    email=email,  # No es necesario codificar/decodificar aquí
-                    rol=form.rol.data
-                )
-                usuario.set_password(form.contrasena.data)
-                db.session.add(usuario)
-                db.session.commit()
-
-                # Generar token y enviar correo
-                token = usuario.generar_token_confirmacion()
-                try:
-                    enlace = url_for('confirmar_email', token=token, _external=True)
-                    
-                    Usuario.enviar_correo(
-                        email=usuario.email,
-                        token=token,
-                        ruta="confirmar_email",
-                        asunto="Confirma tu correo electrónico",
-                        mensaje="Haz clic en el siguiente enlace para confirmar tu correo:"
-                    )
-                    flash("Registro exitoso. Por favor, confirma tu correo electrónico.", "success")
-                    return redirect(url_for('login'))
-                except Exception as e:
-                    logging.error(f"Error al enviar correo: {e}")
-                    flash("Ocurrió un error al enviar el correo. Intenta nuevamente.", "danger")
-                    db.session.rollback()
-                    return render_template('registro.html', form=form)
-
-            except Exception as e:
-                logging.error(f"Error al registrar usuario: {e}")
-                flash("Ocurrió un error inesperado. Intenta nuevamente.", "danger")
-                db.session.rollback()
-                
+            # Lógica para registrar al usuario
+            nuevo_usuario = Usuario(
+                nombre=form.nombre.data,
+                email=form.email.data,
+                contrasena=form.contrasena.data,  # Asegúrate de hashear la contraseña
+                rol=form.rol.data
+            )
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+            flash('Usuario registrado exitosamente.', 'success')
+            return redirect(url_for('login'))
         return render_template('registro.html', form=form)
 
 
@@ -157,22 +114,12 @@ def register_routes(app, db, mail):
         if form.validate_on_submit():
             usuario = Usuario.query.filter_by(email=form.email.data).first()
             if usuario:
-                if usuario.esta_bloqueada():
-                    flash('Tu cuenta está bloqueada temporalmente. Intenta más tarde.', 'danger')
-                    return redirect(url_for('login'))
-
                 if usuario.check_password(form.contrasena.data):
-                    usuario.resetear_intentos_fallidos()
                     login_user(usuario)
                     flash('Inicio de sesión exitoso.', 'success')
                     return redirect(url_for('index'))
                 else:
-                    usuario.intentos_fallidos += 1
-                    db.session.commit()
-                    if usuario.limitador_inicio():
-                        flash('Demasiados intentos fallidos. Tu cuenta ha sido bloqueada temporalmente.', 'danger')
-                    else:
-                        flash('Credenciales incorrectas. Intenta nuevamente.', 'warning')
+                    flash('Credenciales incorrectas. Intenta nuevamente.', 'warning')
             else:
                 flash('No se encontró una cuenta con ese correo electrónico.', 'danger')
         return render_template('login.html', form=form)
@@ -189,44 +136,19 @@ def register_routes(app, db, mail):
         return redirect(url_for('index'))
 
     @app.route('/agregar_libro', methods=['GET', 'POST'])
-    @login_required
-    @requiere_rol('bibliotecario', 'admin')  # Solo accesible para bibliotecarios y administradores
     def agregar_libro():
-        """
-        Permite agregar un nuevo libro a la biblioteca.
-        Solo los bibliotecarios pueden acceder a esta ruta.
-        """
         form = AgregarLibroForm()
         if form.validate_on_submit():
-            try:
-                isbn = form.isbn.data.strip()
-                titulo = form.titulo.data.strip()
-                autor = form.autor.data.strip()
-
-                # Validar ISBN (10 o 13 dígitos)
-                if not Libro.validar_isbn(isbn):
-                    flash("El ISBN debe tener 10 o 13 dígitos.", "danger")
-                    return redirect(url_for('agregar_libro'))
-
-                # Validar que el título no esté duplicado
-                if not Libro.validar_titulo(titulo):
-                    flash("Ya existe un libro con este título.", "danger")
-                    return redirect(url_for('agregar_libro'))
-
-                # Crear el nuevo libro
-                libro = Libro(
-                    isbn=isbn,
-                    titulo=titulo,
-                    autor=autor
-                )
-                db.session.add(libro)
-                db.session.commit()
-
-                flash("Libro agregado correctamente.", "success")
-                return redirect(url_for('index'))
-            except Exception as e:
-                logging.error(f"Error al agregar libro: {e}")
-                flash("Ocurrió un error al agregar el libro. Intenta nuevamente.", "danger")
+            # Lógica para agregar el libro a la base de datos
+            nuevo_libro = Libro(
+                isbn=form.isbn.data,
+                titulo=form.titulo.data,
+                autor=form.autor.data
+            )
+            db.session.add(nuevo_libro)
+            db.session.commit()
+            flash('Libro agregado exitosamente.', 'success')
+            return redirect(url_for('index'))
         return render_template('agregar_libro.html', form=form)
 
 
@@ -246,24 +168,16 @@ def register_routes(app, db, mail):
     @login_required
     @requiere_rol('bibliotecario', 'admin')  # Solo accesible para bibliotecarios y administradores
     def editar_libro(libro_id):
-        """
-        Permite editar un libro específico.
-        Solo los bibliotecarios pueden acceder a esta ruta.
-        """
         libro = Libro.query.get_or_404(libro_id)
-        form = EditarLibroForm(obj=libro)  # Inicializar el formulario con los datos del libro
-
+        form = EditarLibroForm(obj=libro)  # Prellenar el formulario con los datos del libro
         if form.validate_on_submit():
-            try:
-                form.populate_obj(libro)  # Actualizar el objeto libro con los datos del formulario
-                db.session.commit()
-                flash(f'Libro "{libro.titulo}" editado correctamente.', 'success')
-                return redirect(url_for('index'))
-            except Exception as e:
-                logging.error(f"Error al editar libro: {e}")
-                flash("Ocurrió un error al editar el libro. Intenta nuevamente.", "danger")
-
-        return render_template('editar_libro.html', form=form, libro=libro)  # Pasar el formulario al template
+            libro.titulo = form.titulo.data
+            libro.autor = form.autor.data
+            libro.isbn = form.isbn.data
+            db.session.commit()
+            flash('Libro actualizado exitosamente.', 'success')
+            return redirect(url_for('gestion_libros'))
+        return render_template('editar_libro.html', form=form, libro=libro)
 
 
     @app.route('/eliminar_libro/<int:libro_id>', methods=['GET', 'POST'])

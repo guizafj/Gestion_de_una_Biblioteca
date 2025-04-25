@@ -7,23 +7,35 @@
 
         <!-- Campo ISBN -->
         <div class="form-group input-container">
-            <label for="isbn">ISBN:</label>
-            <input type="text" id="isbn" name="isbn" class="form-control" placeholder="Ingresa el ISBN del libro" required>
-            <small class="text-danger" id="isbn-error" style="display: none;">El campo ISBN es obligatorio.</small>
+            {{ form.isbn.label(class="form-label") }}
+            {{ form.isbn(class="form-control", placeholder="Ingresa el ISBN del libro") }}
+            {% if form.isbn.errors %}
+                <small class="text-danger">
+                    {{ form.isbn.errors[0] }}
+                </small>
+            {% endif %}
         </div>
 
         <!-- Campo Título -->
         <div class="form-group input-container">
-            <label for="titulo">Título:</label>
-            <input type="text" id="titulo" name="titulo" class="form-control" placeholder="Ingresa el título del libro" required>
-            <small class="text-danger" id="titulo-error" style="display: none;">El campo Título es obligatorio.</small>
+            {{ form.titulo.label(class="form-label") }}
+            {{ form.titulo(class="form-control", placeholder="Ingresa el título del libro") }}
+            {% if form.titulo.errors %}
+                <small class="text-danger">
+                    {{ form.titulo.errors[0] }}
+                </small>
+            {% endif %}
         </div>
 
         <!-- Campo Autor -->
         <div class="form-group input-container">
-            <label for="autor">Autor:</label>
-            <input type="text" id="autor" name="autor" class="form-control" placeholder="Ingresa el autor del libro" required>
-            <small class="text-danger" id="autor-error" style="display: none;">El campo Autor es obligatorio.</small>
+            {{ form.autor.label(class="form-label") }}
+            {{ form.autor(class="form-control", placeholder="Ingresa el autor del libro") }}
+            {% if form.autor.errors %}
+                <small class="text-danger">
+                    {{ form.autor.errors[0] }}
+                </small>
+            {% endif %}
         </div>
 
         <!-- Botones -->

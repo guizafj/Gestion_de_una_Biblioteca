@@ -1,15 +1,16 @@
 # Dependencias principales
 Flask==2.3.2               # Framework web ligero
 Flask-SQLAlchemy==3.0.5    # Integración de SQLAlchemy con Flask
-Flask-Login==0.6.2         # Manejo de autenticación y sesiones de usuarios
+Flask-Login>=0.6.2         # Manejo de autenticación y sesiones de usuarios
 Flask-Mail==0.9.1          # Para enviar correos electrónicos
 WTForms==3.0.1             # Creación y validación de formularios
-Flask-WTF==1.1.1           # Integración de WTForms con Flask
 email-validator==2.0.0     # Para validar direcciones de correo electrónico
-Werkzeug>=2.2.3            # Funciones internas de Flask
+Werkzeug>=2.3.3            # Funciones internas de Flask
 python-dotenv==1.0.0       # Para cargar variables de entorno desde .env
 Flask-Bcrypt==1.0.1        # Hashing seguro de contraseñas
 flask-limiter==2.8.1       # Limita el número de solicitudes por usuario
+mysqlclient>=2.1.0,<3.0    # Cliente MySQL para Python
+Flask-WTF>=1.1.1
 
 # Dependencias opcionales
 Flask-Migrate==4.0.4       # Migraciones de la base de datos con Alembic

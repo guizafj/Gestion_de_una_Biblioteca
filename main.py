@@ -1,12 +1,15 @@
 from flask import Flask, url_for
 from flask_login import LoginManager
+from flask_migrate import Migrate
 from config import Config
 from extensions import db, mail
 from modules.auth import load_user
 from modules.routes import register_routes
+from modules.models import Usuario, Libro, Prestamo
 from werkzeug.middleware.proxy_fix import ProxyFix
 import urllib.parse
 import logging
+from flask_seasurf import SeaSurf
 
 logging.basicConfig(
     filename='app.log',
@@ -66,6 +69,8 @@ def initialize_extensions(app):
     db.init_app(app)
     mail.init_app(app)
 
+    migrate = Migrate(app, db)  # Configurar Flask-Migrate
+
     login_manager = LoginManager(app)
     login_manager.login_view = 'login'
     login_manager.user_loader(load_user)
@@ -77,7 +82,7 @@ def initialize_extensions(app):
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
     with app.app_context():
         try:
             db.engine.execute('SELECT 1')
