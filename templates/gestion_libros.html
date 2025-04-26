@@ -8,14 +8,15 @@
                 <span>{{ libro.titulo }} - {{ libro.autor }}</span>
                 <div>
                     <!-- Botón para editar -->
-                    <a href="{{ url_for('editar_libro', libro_id=libro.id) }}" class="btn btn-primary btn-sm">Editar</a>
+                    <a href="{{ url_for('editar_libro', libro_id=libro.id) }}" class="btn btn-primary btn-sm">Editar <i class="bi bi-pencil"></i></a>
                     <!-- Formulario para eliminar -->
                     <form method="POST" action="{{ url_for('eliminar_libro', libro_id=libro.id) }}" style="display:inline;">
-                        <button type="submit" class="btn btn-danger btn-sm btn-eliminar" data-titulo="{{ libro.titulo }}">Eliminar</button>
+                        <button type="submit" class="btn btn-danger btn-sm btn-eliminar" data-titulo="{{ libro.titulo }}">Eliminar <i class="bi bi-trash"></i></button>
                     </form>
                 </div>
             </li>
         {% endfor %}
     </ul>
-    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Volver al Inicio</a>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Volver al Inicio <i class="bi bi-chevron-bar-up"></i></a>
+    <a href="{{ url_for('agregar_libro') }}" class="btn btn-primary mt-3">Agregar Libro <i class="bi bi-file-earmark-plus"></i></a>
 {% endblock %}

@@ -10,12 +10,17 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import urllib.parse
 import logging
 from flask_seasurf import SeaSurf
+import os
 
 logging.basicConfig(
     filename='app.log',
     level=logging.INFO,
     format='%(asctime)s:%(levelname)s:%(message)s'
 )
+
+# cargar las variables de entorno desde el archivo .env
+admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
+admin_password = os.getenv('ADMIN_PASSWORD', 'admin123')
 
 def create_app(testing=False):
     """
@@ -88,4 +93,4 @@ if __name__ == '__main__':
             db.engine.execute('SELECT 1')
             print("Conexión a MySQL exitosa.")
         except Exception as e:
-            print(f"Error al conectar a MySQL: {e}")
+            print(f"Error al conectar a MySQL  {e}")

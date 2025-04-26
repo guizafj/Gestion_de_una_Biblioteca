@@ -37,9 +37,20 @@
                 </small>
             {% endif %}
         </div>
+        <!--campo de cantidad-->
+        <div class="form-group input-container">
+            {{ form.cantidad.label(class="form-label") }}
+            {{ form.cantidad(class="form-control", placeholder="Ingresa la cantidad") }}
+            {% if form.cantidad.errors %}
+                <small class="text-danger">
+                    {{ form.cantidad.errors[0] }}
+                </small>
+            {% endif %}
 
         <!-- Botones -->
-        <button type="submit" class="btn btn-primary">Agregar Libro</button>
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
+         <div class="container py-3">
+            <button type="submit" class="btn btn-primary">Agregar Libro <i class="bi bi-patch-plus"></i></button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar <i class="bi bi-x-octagon"></i></a>
+        </div>
     </form>
 {% endblock %}

@@ -10,8 +10,8 @@
     </ul>
     <form method="POST">
         <!-- Botón de confirmación -->
-        <button type="submit" class="btn btn-danger btn-eliminar" data-titulo="{{ libro.titulo }}">Confirmar Eliminación</button>
+        <button type="submit" class="btn btn-danger btn-eliminar" data-titulo="{{ libro.titulo }}">Confirmar Eliminación <i class="bi bi-trash3"></i></button>
         <!-- Botón de cancelación -->
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar <i class="bi bi-x-square"></i></a>
     </form>
 {% endblock %}

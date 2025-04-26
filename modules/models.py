@@ -20,31 +20,114 @@ class Libro(db.Model):
     isbn = db.Column(db.String(20), unique=True, nullable=False, index=True) # Índice para ISBN
     titulo = db.Column(db.String(100), nullable=False, index=True) # Índice para título
     autor = db.Column(db.String(100), nullable=False, index=True) # Índice para autor
+    autor = db.Column(db.String(100), nullable=False, index=True) # Índice para autor - no es unico
+    cantidad = db.Column(db.Integer, nullable=False)
     disponible = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
         return f"<Libro {self.titulo}>"
 
-    @validates('isbn')
-    def validar_isbn(self, key, isbn):
+    @staticmethod
+    def validar_isbn(isbn, libro_id=None):
         """
         Valida que el ISBN tenga 10 o 13 dígitos y sea único en la base de datos.
+        Args:
+            isbn (str): El ISBN a validar.
+            libro_id (int): El ID del libro actual (opcional, para excluirlo de la validación).
+        Returns:
+            str: El ISBN validado.
+        Raises:
+            ValueError: Si el ISBN no es válido o ya existe en la base de datos.
         """
+        # Validar que el ISBN no esté vacío
+        if not isbn or isbn.strip() == "":
+            raise ValueError("El ISBN no puede estar vacío.")
+        
+        # Validar formato del ISBN
         pattern = r"^\d{10}$|^\d{13}$"
         if not re.match(pattern, isbn):
             raise ValueError("El ISBN debe tener 10 o 13 dígitos.")
-        if Libro.query.filter_by(isbn=isbn).first():
+
+        # Validar unicidad del ISBN
+        libro = Libro.query.filter_by(isbn=isbn).first()
+        if libro and (libro_id is None or libro.id != libro_id):
             raise ValueError("El ISBN ya existe en la base de datos.")
+
         return isbn
 
     @staticmethod
-    def validar_titulo(titulo):
+    def validar_titulo(titulo, libro_id=None):
         """
-        Valida que el título no esté duplicado.
+        Valida que el título no esté duplicado en la base de datos.
+        Args:
+            titulo (str): El título a validar.
+            libro_id (int): El ID del libro actual (opcional, para excluirlo de la validación).
+        Returns:
+            str: El título validado.
+        Raises:
+            ValueError: Si el título ya existe en la base de datos.
         """
-        if Libro.query.filter_by(titulo=titulo).first():
+        # Verificar que el título no esté vacío
+        if not titulo or titulo.strip() == "":
+            raise ValueError("El título no puede estar vacío.")
+        
+        # Validar formato del titulo (solo letras, espacios y caracteres especiales básicos)
+        if not re.match(r"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.\-]+$", titulo):
+            raise ValueError("El autor solo puede contener letras, espacios, puntos y guiones.")
+
+    
+        # Validar unicidad del título
+        libro = Libro.query.filter_by(titulo=titulo).first()
+        if libro and (libro_id is None or libro.id != libro_id):
             raise ValueError("El título ya existe en la base de datos.")
-        return True
+        return titulo
+    
+    @staticmethod
+    def validar_autor(autor):
+        """
+        Valida que el autor no esté vacío y tenga un formato adecuado.
+        Args:
+            autor (str): El autor a validar.
+        Returns:
+            str: El autor validado.
+        Raises:
+            ValueError: Si el autor no es válido.
+        """
+        # Verificar que el autor no esté vacío
+        if not autor or autor.strip() == "":
+            raise ValueError("El autor no puede estar vacío.")
+        
+        # Validar formato del autor (solo letras, espacios y caracteres especiales básicos)
+        if not re.match(r"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.\-]+$", autor):
+            raise ValueError("El autor solo puede contener letras, espacios, puntos y guiones.")
+
+        return autor
+  
+    @staticmethod
+    def validar_cantidad(cantidad):
+        """
+        Valida que la cantidad sea un número entero positivo.
+        Args:
+            cantidad (int): La cantidad a validar.
+        Returns:
+            int: La cantidad validada.
+        Raises:
+            ValueError: Si la cantidad no es válida.
+        """
+        # Verificar que la cantidad no esté vacía
+        if cantidad is None or str(cantidad).strip() == "":
+            raise ValueError("La cantidad no puede estar vacía.")
+
+        # Verificar que la cantidad sea un número entero
+        if not str(cantidad).isdigit():
+            raise ValueError("La cantidad debe ser un número entero.")
+
+        # Verificar que la cantidad sea mayor que 0
+        cantidad = int(cantidad)
+        if cantidad <= 0:
+            raise ValueError("La cantidad debe ser mayor que 0.")
+
+        return cantidad
 
     @classmethod
     def contar_libros(cls):
@@ -59,10 +142,10 @@ class Usuario(UserMixin, db.Model):
     Representa un usuario en la aplicación.
     """
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)  # Asegúrate de que admita Unicode
+    nombre = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    __contrasena_hash = db.Column(db.String(60), nullable=False)
-    rol = db.Column(db.String(20), default='usuario')  # Roles: 'usuario', 'bibliotecario', 'admin'
+    __contrasena_hash = db.Column(db.String(255), nullable=False)  # Aumentado a 255
+    rol = db.Column(db.String(20), default='usuario')
     email_confirmado = db.Column(db.Boolean, default=False)
     token_confirmacion = db.Column(db.String(100), nullable=True)
     intentos_fallidos = db.Column(db.Integer, default=0)
@@ -108,23 +191,19 @@ class Usuario(UserMixin, db.Model):
         """
         raise AttributeError("El acceso directo al hash de la contraseña no está permitido.")
 
-    def set_password(self, contrasena):
+    def set_password(self, password):
         """
-        Genera un hash seguro para la contraseña.
+        Hashea y almacena la contraseña.
         """
-        if not contrasena:
-            raise ValueError("La contraseña no puede estar vacía.")
-        if len(contrasena) < 8:
-            raise ValueError("La contraseña debe tener al menos 8 caracteres.")
-        self.__contrasena_hash = bcrypt.hashpw(contrasena.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        from werkzeug.security import generate_password_hash
+        self.__contrasena_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=16)
 
-    def check_password(self, contrasena):
+    def check_password(self, password):
         """
         Verifica si la contraseña proporcionada coincide con el hash almacenado.
         """
-        if not contrasena:
-            return False
-        return bcrypt.checkpw(contrasena.encode('utf-8'), self.__contrasena_hash.encode('utf-8'))
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self.__contrasena_hash, password)
 
     def generar_token_confirmacion(self, expiracion=3600):
         """

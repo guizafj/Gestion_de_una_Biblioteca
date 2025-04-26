@@ -29,7 +29,8 @@
         {% endfor %}
     </ul>
 
-    {% if current_user.is_authenticated and current_user.es_bibliotecario %}
-        <a href="{{ url_for('agregar_libro') }}" class="btn btn-primary mt-3">Agregar Libro</a>
+    {% if current_user.is_authenticated and (current_user.es_bibliotecario() or current_user.es_admin()) %}
+        <a href="{{ url_for('agregar_libro') }}" class="btn btn-primary mt-3">Agregar Libro <i class="bi bi-bookmark-plus"></i></a>
+        <a href="{{ url_for('gestion_libros') }}" class="btn btn-primary mt-3 ">Gestionar Libros <i class="bi bi-gear-wide-connected"></i></a>
     {% endif %}
 {% endblock %}

@@ -4,10 +4,15 @@ from modules.models import Usuario
 from flask_mail import Message
 from flask import url_for
 import logging
+import os
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Obtener credenciales del administrador desde variables de entorno
+admin_email = os.getenv('ADMIN_EMAIL', 'admin@biblioteca.libro')
+admin_password = os.getenv('ADMIN_PASSWORD', 'TuContraseñaSegura')
 
 def crear_admin():
     """
@@ -17,25 +22,35 @@ def crear_admin():
         app = create_app()
         
         with app.app_context():
+            # Verificar si ya existe un administrador
+            if Usuario.query.filter_by(rol="admin").first():
+                logger.info("Ya existe un usuario administrador. No se creará uno nuevo.")
+                return
+            
             # Crear un administrador inicial
             admin = Usuario(
                 nombre="Administrador",
-                email="soporte@ecolibri.art",
+                email=admin_email,
                 rol="admin"
             )
-            admin.set_password("admin123")
+            
+            # Establecer la contraseña utilizando el método set_password
+            admin.set_password(admin_password)  # Contraseña predeterminada
+            
+            # Agregar y guardar el administrador en la base de datos
             db.session.add(admin)
             db.session.commit()
+            logger.info("Administrador creado exitosamente.")
 
-            # Generar token y enviar correo
+            # Generar token de confirmación
             token = admin.generar_token_confirmacion()
             
-            # Generar enlace sin codificación adicional
+            # Generar enlace de confirmación
             enlace = url_for('confirmar_email', token=token, _external=True)
             
-            # Crear mensaje
+            # Crear mensaje de correo
             msg = Message(
-                subject="Confirmacion de cuenta",
+                subject="Confirmación de cuenta",
                 sender=app.config['MAIL_DEFAULT_SENDER'],
                 recipients=[admin.email],
                 charset='utf-8'
@@ -77,7 +92,7 @@ def crear_admin():
             
             # Enviar el correo
             mail.send(msg)
-            logger.info(f"Administrador creado exitosamente. Correo enviado a {admin.email}")
+            logger.info(f"Correo de confirmación enviado a {admin.email}")
             
     except Exception as e:
         logger.error(f"Error al crear administrador: {str(e)}")

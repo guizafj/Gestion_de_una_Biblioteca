@@ -39,8 +39,10 @@
         </div>
 
         <!-- Botón de Envío -->
-        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
-        <a href="{{ url_for('registro') }}" class="btn btn-link">Registrarse</a>
-        <a href="{{ url_for('recuperar_cuenta') }}" class="btn btn-link">¿Olvidaste tu contraseña?</a>
+         <div class="container py-3">
+            <button type="submit" class="btn btn-primary">Iniciar Sesión <i class="bi bi-play-circle"></i></button>
+            <a href="{{ url_for('registro') }}" class="btn btn-link">Registrarse <i class="bi bi-person-plus"></i></a>
+            <a href="{{ url_for('recuperar_cuenta') }}" class="btn btn-link">¿Olvidaste tu contraseña? <i class="bi bi-person-fill-exclamation"></i></a>
+         </div>
     </form>
 {% endblock %}

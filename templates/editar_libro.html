@@ -1,39 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="container mt-5">
     <h2>Editar Libro</h2>
     <form method="POST" action="{{ url_for('editar_libro', libro_id=libro.id) }}">
         {{ form.hidden_tag() }}
-
-        <!-- Campo Título -->
-        <div class="form-group input-container">
-            {{ form.titulo.label(class="form-label") }}
-            {{ form.titulo(class="form-control") }}
-            {% if form.titulo.errors %}
-                <small class="text-danger">{{ form.titulo.errors[0] }}</small>
-            {% endif %}
-        </div>
-
-        <!-- Campo Autor -->
-        <div class="form-group input-container">
-            {{ form.autor.label(class="form-label") }}
-            {{ form.autor(class="form-control") }}
-            {% if form.autor.errors %}
-                <small class="text-danger">{{ form.autor.errors[0] }}</small>
-            {% endif %}
-        </div>
-
-        <!-- Campo ISBN -->
-        <div class="form-group input-container">
-            {{ form.isbn.label(class="form-label") }}
+        <div class="mb-3">
+            <label for="isbn" class="form-label">ISBN</label>
             {{ form.isbn(class="form-control") }}
-            {% if form.isbn.errors %}
-                <small class="text-danger">{{ form.isbn.errors[0] }}</small>
-            {% endif %}
+            {% for error in form.isbn.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
         </div>
-
-        <!-- Botones -->
-        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
+        <div class="mb-3">
+            <label for="titulo" class="form-label">Título</label>
+            {{ form.titulo(class="form-control") }}
+            {% for error in form.titulo.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            <label for="autor" class="form-label">Autor</label>
+            {{ form.autor(class="form-control") }}
+            {% for error in form.autor.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            <label for="cantidad" class="form-label">Cantidad</label>
+            {{ form.cantidad(class="form-control") }}
+            {% for error in form.cantidad.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">{{ form.submit.label }}</button>
+        <a href="{{ url_for('gestion_libros') }}" class="btn btn-secondary">Cancelar</a>
     </form>
+</div>
 {% endblock %}

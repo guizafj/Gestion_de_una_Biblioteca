@@ -68,17 +68,21 @@ def register_routes(app, db, mail):
     def registro():
         form = RegistroForm()
         if form.validate_on_submit():
-            # Lógica para registrar al usuario
+            # Verificar si el correo ya esta registrado
+            if Usuario.query.filter_by(email=form.email.data).first():
+                flash('El correo electrónico ya está registrado.', 'warning')
+                return redirect(url_for('registro'))
+            # Se crea un nuevo usuario
             nuevo_usuario = Usuario(
                 nombre=form.nombre.data,
                 email=form.email.data,
-                contrasena=form.contrasena.data,  # Asegúrate de hashear la contraseña
                 rol=form.rol.data
             )
+            nuevo_usuario.set_password(form.contrasena.data)  # Asegúrate de que set_password use un método válido
             db.session.add(nuevo_usuario)
             db.session.commit()
-            flash('Usuario registrado exitosamente.', 'success')
-            return redirect(url_for('login'))
+            flash('Usuario registrado exitosamente, confirma tu correo electrónico.', 'success')
+            return redirect(url_for('login')) # redirigir al inicio de sesión
         return render_template('registro.html', form=form)
 
 
@@ -143,13 +147,32 @@ def register_routes(app, db, mail):
             nuevo_libro = Libro(
                 isbn=form.isbn.data,
                 titulo=form.titulo.data,
-                autor=form.autor.data
+                autor=form.autor.data,
+                cantidad=form.cantidad.data,
             )
             db.session.add(nuevo_libro)
             db.session.commit()
             flash('Libro agregado exitosamente.', 'success')
             return redirect(url_for('index'))
         return render_template('agregar_libro.html', form=form)
+    
+    @app.route('/buscar_libro', methods=['GET', 'POST'])
+    def buscar_libro():
+        """
+        Permite buscar libros por título, autor o ISBN.
+        """
+        termino = request.args.get('termino', '').strip()  # Obtener el término de búsqueda
+        libros = []
+
+        if termino:
+            # Buscar libros por título, autor o ISBN
+            libros = Libro.query.filter(
+                (Libro.titulo.ilike(f"%{termino}%")) |
+                (Libro.autor.ilike(f"%{termino}%")) |
+                (Libro.isbn.ilike(f"%{termino}%"))
+            ).all()
+
+        return render_template('buscar_libro.html', libros=libros, termino=termino)
 
 
     @app.route('/gestion_libros')
@@ -168,16 +191,21 @@ def register_routes(app, db, mail):
     @login_required
     @requiere_rol('bibliotecario', 'admin')  # Solo accesible para bibliotecarios y administradores
     def editar_libro(libro_id):
+        """Permite editar un libro específico."""
         libro = Libro.query.get_or_404(libro_id)
-        form = EditarLibroForm(obj=libro)  # Prellenar el formulario con los datos del libro
+        form = EditarLibroForm(libro_id=libro.id, obj=libro)  # Precargar los datos del libro en el formulario adicionalmente se pasa el id del libro
+
         if form.validate_on_submit():
+            # Actualizar los datos del libro con los valores enviados desde el formulario
+            libro.isbn = form.isbn.data
             libro.titulo = form.titulo.data
             libro.autor = form.autor.data
-            libro.isbn = form.isbn.data
+            libro.cantidad = form.cantidad.data
             db.session.commit()
-            flash('Libro actualizado exitosamente.', 'success')
+            flash('Libro actualizado con éxito.', 'success')
             return redirect(url_for('gestion_libros'))
-        return render_template('editar_libro.html', form=form, libro=libro)
+
+        return render_template('editar_libro.html', libro=libro, form=form)
 
 
     @app.route('/eliminar_libro/<int:libro_id>', methods=['GET', 'POST'])
@@ -297,6 +325,27 @@ def register_routes(app, db, mail):
         # Mostrar la lista de usuarios
         usuarios = Usuario.query.all()
         return render_template('gestion_usuarios.html', usuarios=usuarios)
+
+    @app.route('/editar_rol/<int:usuario_id>', methods=['POST'])
+    @login_required
+    @requiere_rol('admin')  # Solo accesible para administradores
+    def editar_rol(usuario_id):
+        """
+        Permite a un administrador actualizar el rol de un usuario.
+        """
+        usuario = Usuario.query.get_or_404(usuario_id)  # Obtener el usuario o devolver un error 404
+        nuevo_rol = request.form.get('rol')  # Obtener el nuevo rol del formulario
+
+        # Validar que el rol sea válido
+        if nuevo_rol not in ['usuario', 'bibliotecario', 'admin']:
+            flash('Rol inválido.', 'danger')
+            return redirect(url_for('gestionar_usuarios'))
+
+        # Actualizar el rol del usuario
+        usuario.rol = nuevo_rol
+        db.session.commit()
+        flash(f'El rol de {usuario.nombre} se actualizó a {nuevo_rol}.', 'success')
+        return redirect(url_for('gestionar_usuarios'))
 
 
     @app.route('/recordatorios')
