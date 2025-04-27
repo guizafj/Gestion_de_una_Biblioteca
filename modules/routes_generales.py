@@ -1,5 +1,5 @@
 """Modulo definido para las rutas generales."""
-from flask import Blueprint, send_from_directory, render_template
+from flask import Blueprint, send_from_directory, render_template, url_for
 from modules.models_libro import Libro  # Importar la clase Libro
 import os
 import logging
@@ -24,9 +24,12 @@ def index():
     Página principal de la aplicación.
     Muestra una lista de libros disponibles y el total de libros en la biblioteca.
     """
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')}
+    ]
     libros = Libro.query.all()
     total_libros = Libro.contar_libros()
-    return render_template('index.html', libros=libros, total_libros=total_libros)
+    return render_template('index.html', libros=libros, total_libros=total_libros, breadcrumbs=breadcrumbs)
 
 
 @generales_bp.app_errorhandler(404)
@@ -34,12 +37,21 @@ def pagina_no_encontrada(error):
     """
     Maneja errores 404 (página no encontrada).
     """
-    return render_template('error.html', mensaje="La página solicitada no existe."), 404
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Error 404', 'url': '#'}
+    ]
+    return render_template('error.html', mensaje="La página solicitada no existe.", breadcrumbs=breadcrumbs), 404
+
 
 @generales_bp.app_errorhandler(500)
 def error_interno_servidor(error):
     """
     Maneja errores 500 (errores internos del servidor).
     """
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Error 500', 'url': '#'}
+    ]
     logging.error(f"Error interno del servidor: {error}")
-    return render_template('error.html', mensaje="Ha ocurrido un error inesperado. Por favor, intenta nuevamente más tarde."), 500
+    return render_template('error.html', mensaje="Ha ocurrido un error inesperado. Por favor, intenta nuevamente más tarde.", breadcrumbs=breadcrumbs), 500

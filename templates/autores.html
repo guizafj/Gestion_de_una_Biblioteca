@@ -18,8 +18,8 @@
                             {% for libro in libros %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ libro.titulo }}
-                                    <span class="badge {{ 'bg-success' if libro.disponible else 'bg-danger' }}">
-                                        {{ 'Disponible' if libro.disponible else 'Prestado' }}
+                                    <span class="badge {{ 'bg-success' if libro.esta_disponible else 'bg-danger' }}">
+                                        {{ 'Disponible' if libro.esta_disponible else 'Prestado' }}
                                     </span>
                                 </li>
                             {% endfor %}

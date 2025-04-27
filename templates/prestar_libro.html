@@ -1,19 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2>Prestar Libro</h2>
-    <p>¿Deseas prestar el libro "{{ libro.titulo }}"?</p>
-    <form method="POST">
-        {% if not reserva %}
-            <div class="mb-3">
-                <label for="usuario_id" class="form-label">Seleccionar Usuario</label>
-                <select class="form-select" id="usuario_id" name="usuario_id" required>
-                    {% for usuario in usuarios %}
-                        <option value="{{ usuario.id }}">{{ usuario.nombre }} ({{ usuario.email }})</option>
-                    {% endfor %}
-                </select>
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h2>Prestar Libro</h2>
             </div>
-        {% endif %}
-        <button type="submit" class="btn btn-primary">Confirmar Préstamo</button>
-    </form>
+            <div class="card-body">
+                <p><strong>Título:</strong> {{ libro.titulo }}</p>
+                <p><strong>Autor:</strong> {{ libro.autor }}</p>
+                <p><strong>ISBN:</strong> {{ libro.isbn }}</p>
+                <p><strong>Copias disponibles:</strong> {{ libro.cantidad }}</p>
+
+                {% if reserva %}
+                    <h3>Detalles de la Reserva</h3>
+                    <p><strong>Usuario:</strong> {{ reserva.usuario.nombre }}</p>
+                    <p><strong>Fecha de Reserva:</strong> {{ reserva.fecha_reserva.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                {% endif %}
+
+                <form method="POST">
+                    {% if not reserva %}
+                        <div class="mb-3">
+                            <label for="usuario_id" class="form-label">Seleccionar Usuario</label>
+                            <select class="form-select" id="usuario_id" name="usuario_id" required>
+                                {% for usuario in usuarios %}
+                                    <option value="{{ usuario.id }}">{{ usuario.nombre }} ({{ usuario.email }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">Confirmar Préstamo</button>
+                    <a href="{{ url_for('prestamos.reservas_pendientes' if reserva else 'generales.index') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.querySelector('form').addEventListener('submit', function(event) {
+            const usuarioSelect = document.getElementById('usuario_id');
+            if (usuarioSelect && !usuarioSelect.value) {
+                alert('Por favor, selecciona un usuario.');
+                event.preventDefault();
+            }
+        });
+    </script>
 {% endblock %}

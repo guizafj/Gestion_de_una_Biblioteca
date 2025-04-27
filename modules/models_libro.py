@@ -1,87 +1,85 @@
 from extensions import db
 import re
+import logging
 
 
 class Libro(db.Model):
     """
     Representa un libro en la biblioteca.
+        Atributos:
+            id (int): Identificador único del libro (clave primaria).
+            isbn (str): Número de Identificación Estándar de Libro (ISBN), debe ser único.
+            titulo (str): Título del libro.
+            autor (str): Nombre del autor del libro.
+            cantidad (int): Número total de copias del libro disponibles.
+            disponible (bool): Indica si hay al menos una copia del libro disponible para préstamo.
     """
     id = db.Column(db.Integer, primary_key=True)
     isbn = db.Column(db.String(20), unique=True, nullable=False, index=True) # Índice para ISBN
     titulo = db.Column(db.String(100), nullable=False, index=True) # Índice para título
     autor = db.Column(db.String(100), nullable=False, index=True) # Índice para autor
-    autor = db.Column(db.String(100), nullable=False, index=True) # Índice para autor - no es unico
     cantidad = db.Column(db.Integer, nullable=False)
-    disponible = db.Column(db.Boolean, default=True)
+    # disponible = db.Column(db.Boolean, default=True)
 
     def __repr__(self):
         return f"<Libro {self.titulo}>"
+    
+    @property
+    def esta_disponible(self):
+        return self.cantidad > 0
 
     @staticmethod
-    def _verificar_isbn10(isbn):
-        """Verifica si una cadena dada es un ISBN-10 válido (función interna)."""
-        isbn = isbn.replace("-", "").replace(" ", "")
-        if len(isbn) != 10:
+    def _limpiar_isbn(isbn):
+        """Elimina guiones y espacios del ISBN."""
+        return isbn.replace("-", "").replace(" ", "")
+
+    @staticmethod
+    def _es_isbn10_valido(isbn):
+        """Verifica si un ISBN-10 es válido."""
+        if len(isbn) != 10 or not isbn[:-1].isdigit() or (isbn[-1] not in "0123456789X"):
             return False
-        if not isbn[:-1].isdigit() or (not isbn[-1].isdigit() and isbn[-1] != 'X'):
-            return False
-        suma = 0
-        for i, digito in enumerate(isbn):
-            peso = 10 - i
-            if digito == 'X':
-                suma += 10 * peso
-            else:
-                suma += int(digito) * peso
+
+        suma = sum((10 - i) * (10 if digito == 'X' else int(digito)) for i, digito in enumerate(isbn))
         return suma % 11 == 0
 
     @staticmethod
-    def _verificar_isbn13(isbn):
-        """Verifica si una cadena dada es un ISBN-13 válido (función interna)."""
-        isbn = isbn.replace("-", "").replace(" ", "")
-        if len(isbn) != 13:
+    def _es_isbn13_valido(isbn):
+        """Verifica si un ISBN-13 es válido."""
+        if len(isbn) != 13 or not isbn.isdigit():
             return False
-        if not isbn[:-1].isdigit():
-            return False
-        suma = 0
-        for i, digito in enumerate(isbn[:-1]):
-            peso = 3 if (i + 1) % 2 == 0 else 1
-            suma += int(digito) * peso
-        digito_calculado = (10 - (suma % 10)) % 10
-        return digito_calculado == int(isbn[-1])
+
+        suma = sum((3 if i % 2 else 1) * int(digito) for i, digito in enumerate(isbn[:-1]))
+        digito_verificacion = (10 - (suma % 10)) % 10
+        return digito_verificacion == int(isbn[-1])
 
     @staticmethod
     def validar_isbn(isbn, libro_id=None):
         """
-        Valida que el ISBN sea válido (10 o 13 dígitos) y sea único en la base de datos.
-        Args:
-            isbn (str): El ISBN a validar.
-            libro_id (int): El ID del libro actual (opcional, para excluirlo de la validación).
-        Returns:
-            str: El ISBN validado.
-        Raises:
-            ValueError: Si el ISBN no es válido o ya existe en la base de datos.
+        Valida que el ISBN sea válido (ISBN-10 o ISBN-13) y único en la base de datos.
         """
         if not isbn or isbn.strip() == "":
             raise ValueError("El ISBN no puede estar vacío.")
 
-        isbn_limpio = isbn.replace("-", "").replace(" ", "")
+        isbn_limpio = Libro._limpiar_isbn(isbn)
+
+        if not isbn_limpio.isdigit() and not (isbn_limpio[:-1].isdigit() and isbn_limpio[-1] in "0123456789X"):
+            raise ValueError("El ISBN contiene caracteres no válidos.")
 
         es_valido = False
         if len(isbn_limpio) == 10:
-            es_valido = Libro._verificar_isbn10(isbn_limpio)
+            es_valido = Libro._es_isbn10_valido(isbn_limpio)
         elif len(isbn_limpio) == 13:
-            es_valido = Libro._verificar_isbn13(isbn_limpio)
+            es_valido = Libro._es_isbn13_valido(isbn_limpio)
 
         if not es_valido:
-            raise ValueError("El ISBN no tiene un formato válido (debe tener 10 o 13 dígitos).")
+            raise ValueError("El ISBN no es válido. Ejemplo de ISBN-10: '0-306-40615-2'. Ejemplo de ISBN-13: '978-3-16-148410-0'.")
 
-        # Validar unicidad del ISBN
         libro = Libro.query.filter_by(isbn=isbn).first()
         if libro and (libro_id is None or libro.id != libro_id):
             raise ValueError("El ISBN ya existe en la base de datos.")
 
-        return isbn
-
+        return isbn_limpio
+    
     @staticmethod
     def validar_titulo(titulo, libro_id=None):
         """

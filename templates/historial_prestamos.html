@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Historial de Préstamos</h2>
+        <table class="table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Autor</th>
+                    <th>Total de Préstamos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for libro in historial %}
+                    <tr>
+                        <td>{{ libro.titulo }}</td>
+                        <td>{{ libro.autor }}</td>
+                        <td>{{ libro.total_prestamos }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

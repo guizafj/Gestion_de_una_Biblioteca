@@ -16,6 +16,10 @@ def registro():
     """
     Ruta para registrar un nuevo usuario.
     """
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Registro', 'url': url_for('auth.registro')}
+    ]
     form = RegistroForm()
     if form.validate_on_submit():
         # Verificar si el correo ya está registrado
@@ -40,13 +44,17 @@ def confirmar_email(token):
     """
     Confirma el correo electrónico del usuario usando el token proporcionado.
     """
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Confirmar Email', 'url': url_for('auth.confirmar_email', token=token)}
+    ]
     try:
         usuario = Usuario.query.filter_by(token_confirmacion=token).first()
         if not usuario:
-            return render_template('confirmar_email.html', error='El enlace de confirmación no es válido.')
+            return render_template('confirmar_email.html', error='El enlace de confirmación no es válido.', breadcrumbs=breadcrumbs)
 
         if datetime.utcnow() > usuario.token_expiracion:
-            return render_template('confirmar_email.html', error='El enlace de confirmación ha expirado.')
+            return render_template('confirmar_email.html', error='El enlace de confirmación ha expirado.', breadcrumbs=breadcrumbs)
 
         usuario.email_confirmado = True
         usuario.token_confirmacion = None
@@ -58,13 +66,17 @@ def confirmar_email(token):
 
     except Exception as e:
         logging.error(f"Error al confirmar el correo: {e}")
-        return render_template('confirmar_email.html', error='Ha ocurrido un error al confirmar tu correo electrónico.')
+        return render_template('confirmar_email.html', error='Ha ocurrido un error al confirmar tu correo electrónico.', breadcrumbs=breadcrumbs)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """
     Ruta para iniciar sesión.
     """
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Iniciar Sesión', 'url': url_for('auth.login')}
+    ]
     form = LoginForm()
     if form.validate_on_submit():
         usuario = Usuario.query.filter_by(email=form.email.data).first()
@@ -77,7 +89,7 @@ def login():
                 flash('Credenciales incorrectas. Intenta nuevamente.', 'warning')
         else:
             flash('No se encontró una cuenta con ese correo electrónico.', 'danger')
-    return render_template('login.html', form=form)
+    return render_template('login.html', form=form, breadcrumbs=breadcrumbs)
 
 @auth_bp.route('/logout')
 @login_required
@@ -94,6 +106,10 @@ def recuperar_cuenta():
     """
     Permite a los usuarios solicitar un enlace para restablecer su contraseña.
     """
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Recuperar Cuenta', 'url': url_for('auth.recuperar_cuenta')}
+    ]
     if request.method == 'POST':
         try:
             email = request.form.get('email').strip()
@@ -134,6 +150,11 @@ def restablecer_contrasena(token):
     """
     Permite a los usuarios restablecer su contraseña usando un token válido.
     """
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Recuperar Cuenta', 'url': url_for('auth.recuperar_cuenta')},
+        {'name': 'Restablecer Contraseña', 'url': url_for('auth.restablecer_contrasena', token=token)}
+    ]
     usuario = Usuario.query.filter_by(token_confirmacion=token).first()
 
     # Verificar si el token es válido

@@ -9,7 +9,7 @@
             <p class="card-text">Autor: {{ libro.autor }}</p>
             <p class="card-text">ISBN: {{ libro.isbn }}</p>
             <p class="card-text">Estado: 
-                {% if libro.disponible %}
+                {% if libro.esta_disponible %}
                     <span class="badge bg-success">Disponible</span>
                 {% else %}
                     <span class="badge bg-danger">No Disponible</span>

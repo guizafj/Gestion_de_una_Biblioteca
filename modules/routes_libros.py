@@ -24,22 +24,56 @@ def allowed_file(filename):
 @login_required
 @requiere_rol('bibliotecario', 'admin')
 def agregar_libro():
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Gestión de Libros', 'url': url_for('libros.gestion_libros')},
+        {'name': 'Agregar Libro', 'url': url_for('libros.agregar_libro')}
+    ]
     form = AgregarLibroForm()
+
     if form.validate_on_submit():
-        nuevo_libro = Libro(
-            isbn=form.isbn.data,
-            titulo=form.titulo.data,
-            autor=form.autor.data,
-            cantidad=form.cantidad.data,
-        )
-        db.session.add(nuevo_libro)
-        db.session.commit()
-        flash('Libro agregado exitosamente.', 'success')
-        return redirect(url_for('libros.gestion_libros'))
-    return render_template('agregar_libro.html', form=form)
+        try:
+            # Validar el ISBN usando el método de models_libro.py
+            isbn = form.isbn.data
+            isbn_validado = Libro.validar_isbn(isbn)
+
+            # Convertir y validar los datos del formulario
+            cantidad = int(form.cantidad.data)
+            if cantidad <= 0:
+                raise ValueError("La cantidad debe ser un número entero positivo.")
+            
+            # Crear un nuevo libro
+            nuevo_libro = Libro(
+                isbn=isbn_validado,
+                titulo=form.titulo.data.strip(),
+                autor=form.autor.data.strip(),
+                cantidad=cantidad,
+            )
+            db.session.add(nuevo_libro)
+            db.session.commit()
+
+            flash('Libro agregado exitosamente.', 'success')
+            return redirect(url_for('libros.gestion_libros'))
+
+        except ValueError as ve:
+            # Manejar errores de validación
+            logging.error(f"Error de validación al agregar libro: {str(ve)}")
+            flash(str(ve), 'danger')
+
+        except Exception as e:
+            # Manejar errores generales
+            logging.error(f"Error inesperado al agregar libro: {str(e)}")
+            db.session.rollback()
+            flash("Ocurrió un error al agregar el libro. Intenta nuevamente.", "danger")
+
+    return render_template('agregar_libro.html', form=form, breadcrumbs=breadcrumbs)
 
 @libros_bp.route('/buscar_libro', methods=['GET', 'POST'])
 def buscar_libro():
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Buscar Libro', 'url': url_for('libros.buscar_libro')}
+    ]
     termino = request.args.get('termino', '').strip()
     libros = []
     if termino:
@@ -48,19 +82,28 @@ def buscar_libro():
             (Libro.autor.ilike(f"%{termino}%")) |
             (Libro.isbn.ilike(f"%{termino}%"))
         ).all()
-    return render_template('buscar_libro.html', libros=libros, termino=termino)
+    return render_template('buscar_libro.html', libros=libros, termino=termino, breadcrumbs=breadcrumbs)
 
 @libros_bp.route('/gestion_libros')
 @login_required
 @requiere_rol('bibliotecario', 'admin')
 def gestion_libros():
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Gestión de Libros', 'url': url_for('libros.gestion_libros')}
+    ]
     libros = Libro.query.all()
-    return render_template('gestion_libros.html', libros=libros)
+    return render_template('gestion_libros.html', libros=libros, breadcrumbs=breadcrumbs)
 
 @libros_bp.route('/editar_libro/<int:libro_id>', methods=['GET', 'POST'])
 @login_required
 @requiere_rol('bibliotecario', 'admin')
 def editar_libro(libro_id):
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Gestión de Libros', 'url': url_for('libros.gestion_libros')},
+        {'name': 'Editar Libro', 'url': url_for('libros.editar_libro', libro_id=libro_id)}
+    ]
     libro = Libro.query.get_or_404(libro_id)
     form = EditarLibroForm(libro_id=libro.id, obj=libro)
     if form.validate_on_submit():
@@ -71,12 +114,17 @@ def editar_libro(libro_id):
         db.session.commit()
         flash('Libro actualizado con éxito.', 'success')
         return redirect(url_for('libros.gestion_libros'))
-    return render_template('editar_libro.html', libro=libro, form=form)
+    return render_template('editar_libro.html', libro=libro, form=form, breadcrumbs=breadcrumbs)
 
 @libros_bp.route('/eliminar_libro/<int:libro_id>', methods=['GET', 'POST'])
 @login_required
 @requiere_rol('bibliotecario', 'admin')
 def eliminar_libro(libro_id):
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Gestión de Libros', 'url': url_for('libros.gestion_libros')},
+        {'name': 'Eliminar Libro', 'url': url_for('libros.eliminar_libro', libro_id=libro_id)}
+    ]
     libro = Libro.query.get_or_404(libro_id)
     if request.method == 'POST':
         try:
@@ -87,11 +135,15 @@ def eliminar_libro(libro_id):
         except Exception as e:
             logging.error(f"Error al eliminar libro: {e}")
             flash("Ocurrió un error al eliminar el libro. Intenta nuevamente.", "danger")
-    return render_template('eliminar_libro.html', libro=libro)
+    return render_template('eliminar_libro.html', libro=libro, breadcrumbs=breadcrumbs)
 
 @libros_bp.route('/autores', methods=['GET'])
 @login_required
 def libros_por_autor():
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Autores', 'url': url_for('libros.libros_por_autor')}
+    ]
     libros = Libro.query.all()
     data = {}
     for libro in libros:
@@ -99,14 +151,19 @@ def libros_por_autor():
             data[libro.autor] = []
         data[libro.autor].append({
             'titulo': libro.titulo,
-            'disponible': libro.disponible
+            'disponible': libro.esta_disponible()
         })
-    return render_template('autores.html', data=data)
+    return render_template('autores.html', data=data, breadcrumbs=breadcrumbs)
 
 @libros_bp.route('/importar_datos', methods=['GET', 'POST'])
 @login_required
 @requiere_rol('admin')
 def importar_datos():
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Gestión de Libros', 'url': url_for('libros.gestion_libros')},
+        {'name': 'Importar Datos', 'url': url_for('libros.importar_datos')}
+    ]
     if request.method == 'POST':
         if 'file' not in request.files:
             flash('No se seleccionó ningún archivo.', 'danger')
@@ -130,7 +187,6 @@ def importar_datos():
                             autor=row['autor'],
                             isbn=row['isbn'],
                             cantidad=int(row['cantidad']),
-                            disponible=int(row['cantidad'])
                         )
                         db.session.add(nuevo_libro)
                     db.session.commit()
@@ -141,4 +197,4 @@ def importar_datos():
             finally:
                 os.remove(filepath)
             return redirect(url_for('libros.gestion_libros'))
-    return render_template('importar_datos.html')
+    return render_template('importar_datos.html', breadcrumbs=breadcrumbs)

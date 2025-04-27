@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Gestión de Préstamos</h2>
+        <table class="table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>Libro</th>
+                    <th>Usuario</th>
+                    <th>Fecha de Préstamo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prestamo in prestamos %}
+                    <tr>
+                        <td>{{ prestamo.libro.titulo }}</td>
+                        <td>{{ prestamo.usuario.nombre }}</td>
+                        <td>{{ prestamo.fecha_prestamo.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            <a href="{{ url_for('prestamos.devolver', libro_id=prestamo.libro.id) }}" class="btn btn-success btn-sm">
+                                Devolver Libro
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

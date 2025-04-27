@@ -8,6 +8,7 @@ import logging
 import re
 from sqlalchemy.orm import validates
 
+
 logging.basicConfig(filename='app.log', level=logging.INFO)
 
 class Usuario(UserMixin, db.Model):
@@ -24,6 +25,8 @@ class Usuario(UserMixin, db.Model):
     intentos_fallidos = db.Column(db.Integer, default=0)
     cuenta_bloqueada_hasta = db.Column(db.DateTime, nullable=True)
     token_expiracion = db.Column(db.DateTime, nullable=True)
+    # En el modelo Usuario
+    #reservas = db.relationship('Reserva', backref='usuario', cascade='all, delete-orphan')
 
     ROLES = {
         'usuario': 'Usuario regular',
@@ -33,6 +36,7 @@ class Usuario(UserMixin, db.Model):
 
     def __repr__(self):
         return f"<Usuario {self.nombre} ({self.rol})>"
+    
 
     @validates('email')
     def validar_email(self, key, email):
@@ -165,16 +169,6 @@ class Usuario(UserMixin, db.Model):
         """
         return self.email_confirmado and self.token_confirmacion is None
     
-    def limitador_inicio(self):
-        """
-        Verifica si el usuario ha excedido el límite de intentos fallidos y bloquea la cuenta si es necesario.
-        """
-        if self.intentos_fallidos >= 5:  # Límite de intentos fallidos
-            self.bloquear_cuenta()  # Bloquea la cuenta utilizando el método existente
-            logging.warning(f"Cuenta bloqueada: {self.email}")
-            return True  # Indica que la cuenta ha sido bloqueada
-        return False  # Indica que la cuenta no está bloqueada
-
     @classmethod
     def crear_usuario(cls, nombre, email, contrasena, rol='usuario'):
         """
@@ -199,7 +193,7 @@ class Usuario(UserMixin, db.Model):
         )
 
         return usuario
-
+        
     @classmethod
     def restablecer_contrasena(cls, email):
         """
@@ -239,6 +233,16 @@ class Usuario(UserMixin, db.Model):
     def es_usuario_regular(self):
         """Verifica si el usuario es un usuario regular"""
         return self.tiene_rol('usuario')
+    
+    def limitador_inicio(self):
+        """
+        Verifica si el usuario ha excedido el límite de intentos fallidos y bloquea la cuenta si es necesario.
+        """
+        if self.intentos_fallidos >= 5:  # Límite de intentos fallidos
+            self.bloquear_cuenta()  # Bloquea la cuenta utilizando el método existente
+            logging.warning(f"Cuenta bloqueada: {self.email}")
+            return True  # Indica que la cuenta ha sido bloqueada
+        return False  # Indica que la cuenta no está bloqueada
 
     def bloquear_cuenta(self, duracion_bloqueo=300):
         """
@@ -260,3 +264,45 @@ class Usuario(UserMixin, db.Model):
         """
         self.intentos_fallidos = 0
         db.session.commit()
+
+    def tiene_reservas_activas(self):
+        """
+        Verifica si el usuario tiene reservas pendientes o aprobadas.
+        Returns:
+            bool: True si tiene reservas activas, False en caso contrario
+        """
+        return any(
+            reserva.estado in ['pendiente', 'aprobada'] 
+            for reserva in self.reservas
+        )
+
+    def obtener_estadisticas_reservas(self):
+        """
+        Obtiene estadísticas de las reservas del usuario.
+        Returns:
+            dict: Diccionario con estadísticas de reservas
+        """
+        return {
+            'total': len(self.reservas),
+            'pendientes': sum(1 for r in self.reservas if r.estado == 'pendiente'),
+            'aprobadas': sum(1 for r in self.reservas if r.estado == 'aprobada'),
+            'rechazadas': sum(1 for r in self.reservas if r.estado == 'rechazada')
+        }
+
+    def notificar_eliminacion(self):
+        """
+        Envía una notificación al usuario antes de que su cuenta sea eliminada.
+        """
+        try:
+            mensaje = "Tu cuenta ha sido eliminada del sistema de la biblioteca."
+            self.enviar_correo(
+                email=self.email,
+                token="",  # No se necesita token
+                ruta="index",
+                asunto="Eliminación de cuenta",
+                mensaje=mensaje,
+                plantilla="notificacion_general.html"
+            )
+            logging.info(f"Notificación de eliminación enviada a {self.email}")
+        except Exception as e:
+            logging.error(f"Error al enviar notificación de eliminación: {e}")
