@@ -164,3 +164,6 @@ test/
 
 # Windows specific
 Thumbs.db
+
+# Archivos relacionados con la migracion de la base de datos
+/migrations/

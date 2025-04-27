@@ -12,7 +12,7 @@
                         <strong>{{ libro.titulo }}</strong> - {{ libro.autor }} (ISBN: {{ libro.isbn }})
                     </div>
                     {% if current_user.is_authenticated and (current_user.es_bibliotecario() or current_user.es_admin()) %}
-                        <a href="{{ url_for('editar_libro', libro_id=libro.id) }}" class="btn btn-sm btn-warning">
+                        <a href="{{ url_for('libros.editar_libro', libro_id=libro.id) }}" class="btn btn-sm btn-warning">
                             Editar <i class="bi bi-pencil"></i>
                         </a>
                     {% endif %}

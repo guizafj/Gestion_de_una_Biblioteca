@@ -2,7 +2,7 @@ import re
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, ValidationError, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
-from modules.models import Libro  # Importar el modelo Libro
+from modules.models_libro import Libro  # Importar el modelo Libro
 
 
 class RegistroForm(FlaskForm):
@@ -143,6 +143,13 @@ class EditarLibroForm(FlaskForm):
 class BuscarLibroForm(FlaskForm):
     """
     Formulario para buscar libros
+    """
+    termino = StringField('Buscar', validators=[DataRequired(), Length(min=1, max=100)])
+    submit = SubmitField('Buscar')
+
+class BuscarUsuarioForm(FlaskForm):
+    """
+    Formulario para buscar usuarios
     """
     termino = StringField('Buscar', validators=[DataRequired(), Length(min=1, max=100)])
     submit = SubmitField('Buscar')

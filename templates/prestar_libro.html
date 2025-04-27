@@ -4,9 +4,16 @@
     <h2>Prestar Libro</h2>
     <p>¿Deseas prestar el libro "{{ libro.titulo }}"?</p>
     <form method="POST">
-        <!-- Botón de confirmación -->
-        <button type="submit" class="btn btn-primary btn-prestar" data-titulo="{{ libro.titulo }}">Confirmar Préstamo</button>
-        <!-- Botón de cancelación -->
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar</a>
+        {% if not reserva %}
+            <div class="mb-3">
+                <label for="usuario_id" class="form-label">Seleccionar Usuario</label>
+                <select class="form-select" id="usuario_id" name="usuario_id" required>
+                    {% for usuario in usuarios %}
+                        <option value="{{ usuario.id }}">{{ usuario.nombre }} ({{ usuario.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% endif %}
+        <button type="submit" class="btn btn-primary">Confirmar Préstamo</button>
     </form>
 {% endblock %}

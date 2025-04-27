@@ -3,21 +3,7 @@
 {% block content %}
     <h2>Registro de Usuario</h2>
 
-    <!-- Mensajes Flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div id="flash-messages" class="mt-4">
-                {% for category, message in messages %}
-                    <div class="flash-message alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
-    <form id="registro-form" method="POST" action="{{ url_for('registro') }}">
+    <form id="registro-form" method="POST" action="{{ url_for('auth.registro') }}">
         {{ form.hidden_tag() }}
         
         <!-- Campo Nombre -->

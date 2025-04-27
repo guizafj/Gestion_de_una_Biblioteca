@@ -1,22 +1,11 @@
 {% extends "base.html" %} 
 
 {% block content %}
-    <h2>Libros Agrupados por Autor</h2>
-
-    <!-- Mensajes Flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div id="flash-messages">
-                {% for category, message in messages %}
-                    <div class="flash-message {{ category }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+    <h2>Libros Agrupados por Autor</h2>  
 
     <!-- Lista de Autores y Libros -->
     <div class="accordion" id="autoresAccordion">
-        {% for autor, libros in data %}
+        {% for autor, libros in data.items() %}
             <div class="accordion-item">
                 <h3 class="accordion-header" id="heading-{{ loop.index }}">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}" aria-expanded="false" aria-controls="collapse-{{ loop.index }}">
@@ -41,5 +30,5 @@
         {% endfor %}
     </div>
 
-    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Volver al Inicio</a>
+    <a href="{{ url_for('generales.index') }}" class="btn btn-secondary mt-3">Volver al Inicio</a>
 {% endblock %}

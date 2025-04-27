@@ -1,0 +1,43 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Reservas Pendientes</h2>
+
+
+    {% if reservas %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Libro</th>
+                    <th>Usuario</th>
+                    <th>Fecha de Reserva</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reserva in reservas %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ reserva.libro.titulo }}</td>
+                        <td>{{ reserva.usuario.nombre }} ({{ reserva.usuario.email }})</td>
+                        <td>{{ reserva.fecha_reserva.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('prestamos.aprobar_reserva', reserva_id=reserva.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-success btn-sm">Aprobar</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('prestamos.rechazar_reserva', reserva_id=reserva.id) }}" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Rechazar</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-warning">No hay reservas pendientes en este momento.</p>
+    {% endif %}
+</div>
+{% endblock %}

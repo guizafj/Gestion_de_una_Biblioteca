@@ -2,7 +2,7 @@
 
 {% block content %} 
     <h2>Agregar Libro</h2>
-    <form id="agregar-libro-form" method="POST" action="{{ url_for('agregar_libro') }}">
+    <form id="agregar-libro-form" method="POST" action="{{ url_for('libros.agregar_libro') }}">
         {{ form.hidden_tag() }}
 
         <!-- Campo ISBN -->
@@ -50,7 +50,7 @@
         <!-- Botones -->
          <div class="container py-3">
             <button type="submit" class="btn btn-primary">Agregar Libro <i class="bi bi-patch-plus"></i></button>
-            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancelar <i class="bi bi-x-octagon"></i></a>
+            <a href="{{ url_for('generales.index') }}" class="btn btn-secondary">Cancelar <i class="bi bi-x-octagon"></i></a>
         </div>
     </form>
 {% endblock %}

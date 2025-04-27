@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Reservar Libro</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ libro.titulo }}</h5>
+            <p class="card-text">Autor: {{ libro.autor }}</p>
+            <p class="card-text">ISBN: {{ libro.isbn }}</p>
+            <p class="card-text">Estado: 
+                {% if libro.disponible %}
+                    <span class="badge bg-success">Disponible</span>
+                {% else %}
+                    <span class="badge bg-danger">No Disponible</span>
+                {% endif %}
+            </p>
+            <form method="POST">
+                <p>¿Estás seguro de que deseas reservar este libro?</p>
+                <button type="submit" class="btn btn-primary">Confirmar Reserva</button>
+                <a href="{{ url_for('generales.index') }}" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

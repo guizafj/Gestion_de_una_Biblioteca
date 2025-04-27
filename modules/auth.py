@@ -1,4 +1,4 @@
-from modules.models import Usuario
+from modules.models_usuario import Usuario
 
 def load_user(user_id):
     """ 

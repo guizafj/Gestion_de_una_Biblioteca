@@ -2,7 +2,7 @@
 
 {% block content %}
 <h2>Recuperar cuenta</h2>
-<form method="POST" action="{{ url_for('recuperar_cuenta') }}">
+<form method="POST" action="{{ url_for('auth.recuperar_cuenta') }}">
     <div class="mb-3">
         <label for="email" class="form-label">Correo electrónico</label>
         <input type="email" class="form-control" id="email" name="email" required>

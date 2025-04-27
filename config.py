@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+import logging
 
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
@@ -48,3 +49,6 @@ class Config:
     # Configuración de SQLAlchemy
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # Desactiva el seguimiento de modificaciones para mejorar el rendimiento
 
+
+    # Configuración del logging
+    logging.basicConfig(filename='app.log', level=logging.INFO)
