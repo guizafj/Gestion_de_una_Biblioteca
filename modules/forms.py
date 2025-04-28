@@ -47,6 +47,8 @@ class AgregarLibroForm(FlaskForm):
     isbn = StringField('ISBN', validators=[DataRequired(), Length(min=10, max=13)])
     titulo = StringField('Título', validators=[DataRequired()])
     autor = StringField('Autor', validators=[DataRequired()])
+    editorial = StringField('Editorial', validators=[DataRequired()])
+    genero = StringField('Genero', validators=[DataRequired()])
     cantidad = StringField('Cantidad', validators=[DataRequired()])
     submit = SubmitField('Agregar Libro')
 
@@ -76,6 +78,20 @@ class AgregarLibroForm(FlaskForm):
             Libro.validar_autor(autor.data)
         except ValueError as e:
             raise ValidationError(str(e))
+    
+    def validate_genero(self, genero):
+        """Validar que genero tendo un formato adecuado"""
+        try:
+            Libro.validar_genero(genero.data)
+        except ValueError as e:
+            raise ValidationError(str(e))
+        
+    def validate_editorial(self, editorial):
+        """Método para validad que la entrada de editorial tenga un formato adecuado"""
+        try:
+            Libro.validar_editorial(editorial.data)
+        except ValueError as e:
+            raise ValidationError(str(e))
 
     def validate_cantidad(self, cantidad):
         """
@@ -93,6 +109,8 @@ class EditarLibroForm(FlaskForm):
     isbn = StringField('ISBN', validators=[DataRequired(), Length(min=10, max=13)])  # ISBN debe tener entre 10 y 13 caracteres
     titulo = StringField('Título', validators=[DataRequired()])
     autor = StringField('Autor', validators=[DataRequired()])
+    genero = StringField('Genero', validators=[DataRequired()])
+    editorial = StringField('Editorial', validators=[DataRequired()])
     cantidad = StringField('Cantidad', validators=[DataRequired()])
     submit = SubmitField('Actualizar Libro')
 
@@ -128,8 +146,22 @@ class EditarLibroForm(FlaskForm):
         try:
             Libro.validar_autor(autor.data)
         except ValueError as e:
+            raise ValidationError(str(e))        
+     
+    def validate_genero(self, genero):
+        """Validar que genero tendo un formato adecuado"""
+        try:
+            Libro.validar_genero(genero.data)
+        except ValueError as e:
             raise ValidationError(str(e))
         
+    def validate_editorial(self, editorial):
+        """Valida que editorial tenga un formato adecuado"""
+        try:
+            Libro.validar_editorial(editorial.data)
+        except ValueError as e:
+            raise ValidationError(str(e))
+
     def validate_cantidad(self, cantidad):
         """
         Valida que la cantidad sea un número entero positivo.

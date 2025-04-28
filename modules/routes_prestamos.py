@@ -1,6 +1,6 @@
 """Modulo para las rutas de prestamos"""
 from ast import mod
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from extensions import db
 from datetime import datetime, timezone, timedelta
@@ -30,14 +30,11 @@ def prestar(libro_id, reserva_id=None):
         reserva = Reserva.query.get_or_404(reserva_id)
         if reserva.estado != 'aprobada':
             flash('La reserva no está aprobada. No se puede realizar el préstamo.', 'warning')
-            return redirect(url_for('prestamos.reservas_pendientes', breadcrumbs=breadcrumbs))
+            return redirect(url_for('prestamos.reservas_pendientes'))
 
     if not libro.esta_disponible():
         flash('No hay ejemplares disponibles para préstamo.', 'warning')
         return redirect(url_for('prestamos.reservas_pendientes' if reserva else 'generales.index'))
-
-    # Consultar usuarios solo si no hay reserva
-    usuarios = Usuario.query.all() if not reserva else None
 
     breadcrumbs = [
         {'name': 'Inicio', 'url': url_for('generales.index')},
@@ -47,9 +44,15 @@ def prestar(libro_id, reserva_id=None):
 
     if request.method == 'POST':
         try:
+            # Obtener el usuario asociado
             usuario_id = reserva.usuario_id if reserva else request.form.get('usuario_id')
+            if not usuario_id:
+                flash('Debes seleccionar un usuario para realizar el préstamo.', 'danger')
+                return redirect(url_for('prestamos.prestar', libro_id=libro_id))
+
             Prestamo.validar_prestamo(usuario_id)
 
+            # Crear el préstamo
             prestamo = Prestamo(
                 libro_id=libro.id,
                 usuario_id=usuario_id
@@ -64,7 +67,7 @@ def prestar(libro_id, reserva_id=None):
             logging.error(f"Error al realizar el préstamo: {e}")
             flash("Ocurrió un error al realizar el préstamo. Intenta nuevamente.", "danger")
 
-    return render_template('prestar_libro.html', libro=libro, reserva=reserva, usuarios=usuarios, breadcrumbs=breadcrumbs)
+    return render_template('prestar_libro.html', libro=libro, reserva=reserva, breadcrumbs=breadcrumbs)
 
 @prestamos_bp.route('/devolver/<int:libro_id>', methods=['GET', 'POST'])
 @login_required
@@ -335,4 +338,12 @@ def gestionar_prestamos():
     ]
 
     return render_template('gestionar_prestamos.html', prestamos=prestamos, breadcrumbs=breadcrumbs)
+
+@prestamos_bp.route('/buscar_usuarios', methods=['GET'])
+@login_required
+def buscar_usuarios():
+    termino = request.args.get('q', '')  # Obtén el término de búsqueda
+    usuarios = Usuario.query.filter(Usuario.nombre.ilike(f'%{termino}%')).all()
+    usuarios_data = [{'id': usuario.id, 'nombre': usuario.nombre, 'email': usuario.email} for usuario in usuarios]
+    return jsonify(usuarios_data)
 

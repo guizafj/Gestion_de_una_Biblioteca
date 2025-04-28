@@ -27,6 +27,20 @@
             {% endfor %}
         </div>
         <div class="mb-3">
+            <label for="editorial" class="form-label">Editorial</label>
+            {{ form.editorial(class="form-control") }}
+            {% for error in form.editorial.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
+            <label for="genero" class="form-label">Genero</label>
+            {{ form.genero(class="form-control") }}
+            {% for error in form.genero.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+        <div class="mb-3">
             <label for="cantidad" class="form-label">Cantidad</label>
             {{ form.cantidad(class="form-control") }}
             {% for error in form.cantidad.errors %}

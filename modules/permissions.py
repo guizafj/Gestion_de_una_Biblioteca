@@ -2,11 +2,11 @@ from flask import redirect, url_for, flash
 from flask_login import current_user
 from functools import wraps
 import logging
-
+ 
 ROLES_PERMITIDOS = {
     'admin': ['gestionar_usuarios', 'cambiar_rol'],
-    'bibliotecario': ['agregar_libro', 'editar_libro', 'eliminar_libro', 'gestion_libros'],
-    'usuario': ['prestar', 'devolver', 'historial', 'recordatorios']}
+    'bibliotecario': ['agregar_libro', 'editar_libro', 'eliminar_libro', 'gestion_libros', 'prestar', 'devolver'],
+    'usuario': ['reservar', 'historial', 'recordatorios']}
 
 # Decorador personalizado para restringir acceso por rol
 def requiere_rol(*roles):

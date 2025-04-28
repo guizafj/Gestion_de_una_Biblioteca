@@ -1,13 +1,15 @@
-from extensions import db
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()  # Asegúrate de tener tu instancia de SQLAlchemy
 
 class Prestamo(db.Model):
     """
     Representa un préstamo de un libro.
     """
     id = db.Column(db.Integer, primary_key=True)
-    libro_id = db.Column(db.Integer, db.ForeignKey('libro.id'), nullable=False)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    libro_id = db.Column(db.Integer, db.ForeignKey('libro.id', ondelete='SET NULL'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id', ondelete='CASCADE'), nullable=False)
     fecha_prestamo = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     fecha_devolucion = db.Column(db.DateTime, nullable=True)
     estado = db.Column(db.String(20), default='activo')  # Estados: activo, devuelto, vencido

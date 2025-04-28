@@ -37,6 +37,26 @@
                 </small>
             {% endif %}
         </div>
+        <!-- Campo Editorial -->
+        <div class="form-group input-container">
+            {{ form.editorial.label(class="form-label") }}
+            {{ form.editorial(class="form-control", placeholder="Ingresa la editorial del libro") }}
+            {% if form.editorial.errors %}
+                <small class="text-danger">
+                    {{ form.editorial.errors[0] }}
+                </small>
+            {% endif %}
+        </div>
+        <!-- Campo Genero -->
+        <div class="form-group input-container">
+            {{ form.genero.label(class="form-label") }}
+            {{ form.genero(class="form-control", placeholder="Ingresa el genero del libro") }}
+            {% if form.genero.errors %}
+                <small class="text-danger">
+                    {{ form.genero.errors[0] }}
+                </small>
+            {% endif %}
+        </div>
         <!--campo de cantidad-->
         <div class="form-group input-container">
             {{ form.cantidad.label(class="form-label") }}

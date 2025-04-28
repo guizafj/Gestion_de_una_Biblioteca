@@ -47,6 +47,8 @@ def agregar_libro():
                 isbn=isbn_validado,
                 titulo=form.titulo.data.strip(),
                 autor=form.autor.data.strip(),
+                editorial=form.editorial.data.strip(),
+                genero=form.genero.data.strip(),
                 cantidad=cantidad,
             )
             db.session.add(nuevo_libro)
@@ -80,7 +82,9 @@ def buscar_libro():
         libros = Libro.query.filter(
             (Libro.titulo.ilike(f"%{termino}%")) |
             (Libro.autor.ilike(f"%{termino}%")) |
-            (Libro.isbn.ilike(f"%{termino}%"))
+            (Libro.isbn.ilike(f"%{termino}%")) |
+            (Libro.genero.ilike(f"%{termino}%")) |
+            (Libro.editorial.ilike(f"%{termino}%"))
         ).all()
     return render_template('buscar_libro.html', libros=libros, termino=termino, breadcrumbs=breadcrumbs)
 
@@ -110,6 +114,8 @@ def editar_libro(libro_id):
         libro.isbn = form.isbn.data
         libro.titulo = form.titulo.data
         libro.autor = form.autor.data
+        libro.editorial = form.editorial.data
+        libro.genero = form.genero.data
         libro.cantidad = form.cantidad.data
         db.session.commit()
         flash('Libro actualizado con éxito.', 'success')
@@ -128,11 +134,13 @@ def eliminar_libro(libro_id):
     libro = Libro.query.get_or_404(libro_id)
     if request.method == 'POST':
         try:
+            logging.info(f"Intentando eliminar el libro: {libro.titulo} (ID: {libro.id})")
             db.session.delete(libro)
             db.session.commit()
             flash(f'Libro "{libro.titulo}" eliminado correctamente.', 'success')
             return redirect(url_for('libros.gestion_libros'))
         except Exception as e:
+            db.session.rollback()  # Revertir la transacción fallida
             logging.error(f"Error al eliminar libro: {e}")
             flash("Ocurrió un error al eliminar el libro. Intenta nuevamente.", "danger")
     return render_template('eliminar_libro.html', libro=libro, breadcrumbs=breadcrumbs)
@@ -150,10 +158,50 @@ def libros_por_autor():
         if libro.autor not in data:
             data[libro.autor] = []
         data[libro.autor].append({
+            'id': libro.id,
             'titulo': libro.titulo,
-            'disponible': libro.esta_disponible()
+            'esta_disponible': libro.esta_disponible()  # Incluye el resultado del método
         })
     return render_template('autores.html', data=data, breadcrumbs=breadcrumbs)
+
+@libros_bp.route('/generos', methods=['GET'])
+@login_required
+def libros_por_genero():
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Genero', 'url': url_for('libros.libros_por_genero')}
+    ]
+    libros = Libro.query.all()
+    data = {}
+    for libro in libros:
+        if libro.genero not in data:
+            data[libro.genero] = []
+        data[libro.genero].append({
+            'id': libro.id,
+            'titulo': libro.titulo,
+            'esta_disponible': libro.esta_disponible()  # Incluye el resultado del método
+        })
+    return render_template('generos.html', data=data, breadcrumbs=breadcrumbs)
+
+@libros_bp.route('/titulos', methods=['GET'])
+@login_required
+def libros_por_titulo():
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Titulo', 'url': url_for('libros.libros_por_titulo')}
+    ]
+    libros = Libro.query.all()
+    data = {}
+    for libro in libros:
+        if libro.titulo not in data:
+            data[libro.titulo] = []
+        data[libro.titulo].append({
+            'id': libro.id,  # Incluye el ID del libro
+            'titulo': libro.titulo,
+            'autor': libro.autor,  # Incluye el autor del libro
+            'disponible': libro.esta_disponible()
+        })
+    return render_template('titulos.html', data=data, breadcrumbs=breadcrumbs)
 
 @libros_bp.route('/importar_datos', methods=['GET', 'POST'])
 @login_required
@@ -180,12 +228,14 @@ def importar_datos():
                 with open(filepath, newline='', encoding='utf-8') as csvfile:
                     reader = csv.DictReader(csvfile)
                     for row in reader:
-                        if not row['titulo'] or not row['autor'] or not row['isbn'] or not row['cantidad']:
+                        if not row['titulo'] or not row['autor'] or not row['isbn'] or not row['cantidad'] or not row['editorial'] or not row['genero']:
                             raise ValueError("Faltan campos obligatorios en el archivo CSV.")
                         nuevo_libro = Libro(
                             titulo=row['titulo'],
                             autor=row['autor'],
                             isbn=row['isbn'],
+                            editorial=row['editorial'],
+                            genero=row['genero'],
                             cantidad=int(row['cantidad']),
                         )
                         db.session.add(nuevo_libro)

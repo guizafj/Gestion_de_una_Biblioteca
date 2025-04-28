@@ -22,9 +22,9 @@
         <a href="{{ url_for('libros.agregar_libro') }}" class="btn btn-primary mt-3">Agregar Libro <i class="bi bi-bookmark-plus"></i></a>
         <a href="{{ url_for('libros.gestion_libros') }}" class="btn btn-primary mt-3 ">Gestionar Libros <i class="bi bi-gear-wide-connected"></i></a>
         <a href="{{ url_for('prestamos.reservas_pendientes') }}" class="btn btn-primary mt-3 ">Gestionar Reservas <i class="bi bi-gear"></i></a>
-        {% if current_user.is_authenticated and (current_user.es_bibliotecario() or current_user.es_admin()) %}
-            <a href="{{ url_for('prestamos.gestionar_prestamos') }}" class="btn btn-primary mt-3">Gestionar Préstamos <i class="bi bi-calendar3-range"></i></a>
-            <a href="{{ url_for('prestamos.historial_prestamos') }}" class="btn btn-primary mt-3">Historial de Préstamos <i class="bi bi-clock-history"></i></a>
-        {% endif %}
+        
+        <a href="{{ url_for('prestamos.gestionar_prestamos') }}" class="btn btn-primary mt-3">Gestionar Préstamos <i class="bi bi-calendar3-range"></i></a>
+        <a href="{{ url_for('prestamos.historial_prestamos') }}" class="btn btn-primary mt-3">Historial de Préstamos <i class="bi bi-clock-history"></i></a>
+        
     {% endif %} 
 {% endblock %}

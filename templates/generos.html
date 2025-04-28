@@ -1,15 +1,15 @@
 {% extends "base.html" %} 
 
 {% block content %}
-    <h2>Libros Agrupados por Autor</h2>  
+    <h2>Libros Agrupados por Genero</h2>  
 
-    <!-- Lista de Autores y Libros -->
+    <!-- Lista de generos y Libros -->
     <div class="accordion" id="autoresAccordion">
-        {% for autor, libros in data.items() %}
+        {% for genero, libros in data.items() %}
             <div class="accordion-item">
                 <h3 class="accordion-header" id="heading-{{ loop.index }}">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ loop.index }}" aria-expanded="false" aria-controls="collapse-{{ loop.index }}">
-                        {{ autor }}
+                        {{ genero }}
                     </button>
                 </h3>
                 <div id="collapse-{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ loop.index }}" data-bs-parent="#autoresAccordion">
@@ -23,8 +23,8 @@
                                     </span>
                                     {% if libro.esta_disponible %}
                                     <a href="{{ url_for('prestamos.reservar', libro_id=libro.id) }}" class="btn btn-primary btn-sm">Reservar Libro <i class="bi bi-bookmark-plus"></i></a>
-                                    {% endif %}
-                                    {% if current_user.is_authenticated and (current_user.es_bibliotecario() or current_user.es_admin()) %}
+                                {% endif %}
+                                {% if current_user.is_authenticated and (current_user.es_bibliotecario() or current_user.es_admin()) %}
                                         <div>
                                             <!-- Botón para editar -->
                                             <a href="{{ url_for('libros.editar_libro', libro_id=libro.id) }}" class="btn btn-primary btn-sm">Editar <i class="bi bi-pencil"></i></a>
@@ -34,7 +34,7 @@
                                             </form>
                                             <a href="{{ url_for('prestamos.prestar',libro_id=libro.id, reserva_id=None) }}" class="btn btn-primary btn-sm ">Prestar Libro <i class="bi bi-gear-wide-connected"></i></a>
                                         </div>
-                                    {% endif %}
+                                {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>

@@ -1,0 +1,39 @@
+{% extends "base.html" %} 
+
+{% block content %}
+<h2>Lista de Libros</h2>    
+<!-- Lista de Libros -->
+<ul class="list-group mt-3">
+    {% for titulo, libros in data.items() %}
+        <li class="list-group-item">
+            <h4>{{ titulo }}</h4>
+            <ul>
+                {% for libro in libros %}
+                    <li class="d-flex justify-content-between align-items-center">
+                        <span>{{ libro.titulo }} - {{ libro.autor }}</span>
+                        <span class="badge {{ 'bg-success' if libro.disponible else 'bg-danger' }}">
+                            {{ 'Disponible' if libro.disponible else 'Prestado' }}
+                        </span>
+                        {% if libro.disponible %}
+                            <a href="{{ url_for('prestamos.reservar', libro_id=libro.id) }}" class="btn btn-primary btn-sm">Reservar Libro <i class="bi bi-bookmark-plus"></i></a>
+                        {% endif %}
+                        {% if current_user.is_authenticated and (current_user.es_bibliotecario() or current_user.es_admin()) %}
+                            <div>
+                                    <!-- Botón para editar -->
+                                <a href="{{ url_for('libros.editar_libro', libro_id=libro.id) }}" class="btn btn-primary btn-sm">Editar <i class="bi bi-pencil"></i></a>
+                                    <!-- Formulario para eliminar -->
+                                <form method="POST" action="{{ url_for('libros.eliminar_libro', libro_id=libro.id) }}" style="display:inline;">
+                                 <button type="submit" class="btn btn-danger btn-sm btn-eliminar" data-titulo="{{ libro.titulo }}">Eliminar <i class="bi bi-trash"></i></button>
+                                </form>
+                                <a href="{{ url_for('prestamos.prestar',libro_id=libro.id, reserva_id=None) }}" class="btn btn-primary btn-sm ">Prestar Libro <i class="bi bi-gear-wide-connected"></i></a>
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </li>
+    {% endfor %}
+</ul>
+
+<a href="{{ url_for('generales.index') }}" class="btn btn-secondary mt-3">Volver al Inicio</a>
+{% endblock %}

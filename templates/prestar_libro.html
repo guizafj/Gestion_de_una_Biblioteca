@@ -3,45 +3,62 @@
 {% block content %}
     <div class="container mt-4">
         <div class="card">
-            <div class="card-header">
-                <h2>Prestar Libro</h2>
-            </div>
             <div class="card-body">
+                <h4>Prestar Libro</h4>
                 <p><strong>Título:</strong> {{ libro.titulo }}</p>
-                <p><strong>Autor:</strong> {{ libro.autor }}</p>
-                <p><strong>ISBN:</strong> {{ libro.isbn }}</p>
                 <p><strong>Copias disponibles:</strong> {{ libro.cantidad }}</p>
 
                 {% if reserva %}
-                    <h3>Detalles de la Reserva</h3>
-                    <p><strong>Usuario:</strong> {{ reserva.usuario.nombre }}</p>
-                    <p><strong>Fecha de Reserva:</strong> {{ reserva.fecha_reserva.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <p><strong>Usuario:</strong> {{ reserva.usuario.nombre }} ({{ reserva.usuario.email }})</p>
+                {% else %}
+                    <div class="mb-3">
+                        <label for="usuario_busqueda" class="form-label">Buscar Usuario</label>
+                        <input type="text" id="usuario_busqueda" class="form-control" placeholder="Escribe el nombre del usuario..." autocomplete="off">
+                        <ul id="resultados_busqueda" class="list-group mt-2" style="display: none;"></ul>
+                    </div>
+                    <input type="hidden" id="usuario_id" name="usuario_id">
                 {% endif %}
 
                 <form method="POST">
-                    {% if not reserva %}
-                        <div class="mb-3">
-                            <label for="usuario_id" class="form-label">Seleccionar Usuario</label>
-                            <select class="form-select" id="usuario_id" name="usuario_id" required>
-                                {% for usuario in usuarios %}
-                                    <option value="{{ usuario.id }}">{{ usuario.nombre }} ({{ usuario.email }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    {% endif %}
-                    <button type="submit" class="btn btn-primary">Confirmar Préstamo</button>
-                    <a href="{{ url_for('prestamos.reservas_pendientes' if reserva else 'generales.index') }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary mt-3">Confirmar Préstamo</button>
                 </form>
             </div>
         </div>
     </div>
+
+    {% if not reserva %}
     <script>
-        document.querySelector('form').addEventListener('submit', function(event) {
-            const usuarioSelect = document.getElementById('usuario_id');
-            if (usuarioSelect && !usuarioSelect.value) {
-                alert('Por favor, selecciona un usuario.');
-                event.preventDefault();
+        document.getElementById('usuario_busqueda').addEventListener('input', function() {
+            const termino = this.value;
+            const resultados = document.getElementById('resultados_busqueda');
+            resultados.innerHTML = ''; // Limpia los resultados previos
+
+            if (termino.length > 2) { // Realiza la búsqueda si hay al menos 3 caracteres
+                fetch(`/prestamos/buscar_usuarios?q=${encodeURIComponent(termino)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        resultados.style.display = 'block';
+                        if (data.length === 0) {
+                            resultados.innerHTML = '<li class="list-group-item">No se encontraron usuarios</li>';
+                        } else {
+                            data.forEach(usuario => {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item list-group-item-action';
+                                li.textContent = `${usuario.nombre} (${usuario.email})`;
+                                li.dataset.id = usuario.id;
+                                li.addEventListener('click', function() {
+                                    document.getElementById('usuario_busqueda').value = usuario.nombre;
+                                    document.getElementById('usuario_id').value = usuario.id;
+                                    resultados.style.display = 'none';
+                                });
+                                resultados.appendChild(li);
+                            });
+                        }
+                    });
+            } else {
+                resultados.style.display = 'none';
             }
         });
     </script>
+    {% endif %}
 {% endblock %}

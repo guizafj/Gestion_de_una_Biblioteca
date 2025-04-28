@@ -18,6 +18,8 @@ class Libro(db.Model):
     isbn = db.Column(db.String(20), unique=True, nullable=False, index=True) # Índice para ISBN
     titulo = db.Column(db.String(100), nullable=False, index=True) # Índice para título
     autor = db.Column(db.String(100), nullable=False, index=True) # Índice para autor
+    editorial = db.Column(db.String(100), nullable=False, index=True) # Índice para editorial
+    genero = db.Column(db.String(100), nullable=False, index=True) # Índice para genero
     cantidad = db.Column(db.Integer, nullable=False)
     # disponible = db.Column(db.Boolean, default=True)
 
@@ -129,6 +131,49 @@ class Libro(db.Model):
         return autor
   
     @staticmethod
+    def validar_genero(genero):
+        """
+        Valida que el genero no esté vacío y tenga un formato adecuado.
+        Args:
+            genero (str): El genero a validar.
+        Returns:
+            str: El genero validado.
+        Raises:
+            ValueError: Si el genero no es válido.
+        """
+        # Verificar que el genero no esté vacío
+        if not genero or genero.strip() == "":
+            raise ValueError("El genero no puede estar vacío.")
+        
+        # Validar formato del genero (solo letras, espacios y caracteres especiales básicos)
+        if not re.match(r"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.\-]+$", genero):
+            raise ValueError("El genero solo puede contener letras, espacios, puntos y guiones.")
+
+        return genero
+
+    @staticmethod
+    def validar_editorial(editorial):
+        """
+        Valida que la editorial no esté vacía y tenga un formato adecuado.
+        Args:
+            editorial (str): La editorial  a validar.
+        Returns:
+            str: La editorial validada.
+        Raises:
+            ValueError: Si la editorial no es válida.
+        """
+        # Verificar que la editorial no esté vacía
+        if not editorial or editorial.strip() == "":
+            raise ValueError("La editorial no puede estar vacía.")
+        
+        # Validar formato de la editorial (solo letras, espacios y caracteres especiales básicos)
+        if not re.match(r"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.\-]+$", editorial):
+            raise ValueError("La editorial solo puede contener letras, espacios, puntos y guiones.")
+
+        return editorial
+
+
+    @staticmethod
     def validar_cantidad(cantidad):
         """
         Valida que la cantidad sea un número entero positivo.
@@ -161,12 +206,6 @@ class Libro(db.Model):
         """
         return cls.query.count()
 
-    def esta_disponible(self):
-        """
-        Verifica si hay ejemplares disponibles para préstamo.
-        """
-        return self.cantidad > 0
-
     def reducir_cantidad(self):
         """
         Reduce la cantidad disponible en 1 al realizar un préstamo.
@@ -180,3 +219,10 @@ class Libro(db.Model):
         Incrementa la cantidad disponible en 1 al devolver un préstamo.
         """
         self.cantidad += 1
+
+    def esta_disponible(self):
+        """
+        Verifica si hay ejemplares disponibles para préstamo.
+        """
+        
+        return self.cantidad > 0

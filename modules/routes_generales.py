@@ -28,8 +28,17 @@ def index():
         {'name': 'Inicio', 'url': url_for('generales.index')}
     ]
     libros = Libro.query.all()
+    libros_data = [
+        {
+            'id': libro.id,
+            'titulo': libro.titulo,
+            'autor': libro.autor,
+            'esta_disponible': libro.esta_disponible()  # Incluye el resultado del método
+        }
+        for libro in libros
+    ]
     total_libros = Libro.contar_libros()
-    return render_template('index.html', libros=libros, total_libros=total_libros, breadcrumbs=breadcrumbs)
+    return render_template('index.html', libros=libros_data, total_libros=total_libros, breadcrumbs=breadcrumbs)
 
 
 @generales_bp.app_errorhandler(404)
