@@ -101,36 +101,47 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 ## 📦 Estructura del proyecto (en progreso)
 
 ```plaintext
-biblioteca_flask/
-├── app.py                  # Archivo principal de la aplicación
-├── modules/                # Carpeta para módulos independientes
-|   |__ __init__.py         # Este archivo marca el directorio como un paquete de Python.
-│   ├── models.py           # Definición de modelos (libros, usuarios, préstamos)
-│   ├── forms.py            # Formularios usando Flask-WTF
-│   ├── routes.py           # Rutas y lógica de negocio
-│   └── auth.py             # Lógica de autenticación
-├── templates/              # Archivos HTML
-|   ├── agregar_libro.html  # Formulario para agregar libros
-|   ├── autores.html        # Pagina de autores contenidos en la biblioteca
-│   ├── base.html           # Plantilla base
-│   ├── buscar_libro.html   # Página de búsqueda
-│   ├── devolver_libro.html # Formulario para devolver libros
-|   ├── editar_libro.html    # Formulario para editar libros
-|   ├── editar_rol.html     # Formulario para modificar el rol de usuarios en la biblioteca
-|   ├── eliminar_libro.html # Formulario para eliminar libros
-|   ├── error.html          # Pagina para mostrar errores en la aplicación
-|   ├── gestion_libros.html # Pagina para gestionar los libros contenidos en la biblioteca
-|   ├── historial.html      # Se muestra el historial de prestamos por el usuario
-│   ├── index.html          # Página principal
-│   ├── login.html          # Página de inicio de sesión
-│   ├── prestar_libro.html  # Formulario para prestar libros
-│   ├── registro.html       # Página de registro de usuarios
-|   ├── recordatorios.html  # Visualizacion de recordatorios por usuario
-│   └── historial.html      # Historial de préstamos
-├── static/                 # Archivos estáticos (CSS, JS, imágenes)
-│   ├── css/
-│   │   └── styles.css      # Hoja de estilos CSS
-│   └── js/
-│       └── scripts.js      # Archivo JavaScript
+Gestion_de_una_Biblioteca/
+├── main.py                  # Archivo principal de la aplicación Flask
+├── config.py               # Configuración de la aplicación (opcional)
 ├── requirements.txt        # Dependencias del proyecto
-└── README.md               # Documentación del proyecto
+├── README.md               # Documentación del proyecto
+├── .gitignore              # Archivos y carpetas a ignorar por Git
+├── config.py               # Configuración específica de la instancia
+├── instance/               # Configuración específica de la instancia (por ejemplo, base de datos local)
+│   └── bd                  # Base de datos - resultado de las migraciones
+├── src/                    # Código fuente del proyecto
+│   ├── __init__.py         # Inicialización del paquete Flask
+│   ├── models/             # Modelos de la base de datos
+│   │   ├── __init__.py     # Inicialización del paquete de modelos
+│   │   └── models_usuario.py # Modelos relacionados con usuarios
+│   ├── routes/             # Rutas de la aplicación
+│   │   ├── __init__.py     # Inicialización del paquete de rutas
+│   │   ├── routes_libros.py # Rutas relacionadas con libros
+│   │   └── routes_usuarios.py # Rutas relacionadas con usuarios
+│   ├── forms/              # Formularios de Flask-WTF
+│   │   ├── __init__.py     # Inicialización del paquete de formularios
+│   │   └── forms_usuario.py # Formularios relacionados con usuarios
+│   ├── templates/          # Plantillas HTML
+│   │   ├── base.html       # Plantilla base
+│   │   ├── login.html      # Página de inicio de sesión
+│   │   ├── registro.html   # Página de registro de usuarios
+│   │   ├── gestion_libros.html # Página para gestionar libros
+│   │   └── ...             # Otras plantillas
+│   ├── static/             # Archivos estáticos (CSS, JS, imágenes)
+│   │   ├── css/
+│   │   │   └── styles.css  # Hoja de estilos CSS
+│   │   └── js/
+│   │       └── scripts.js  # Archivo JavaScript
+│   └── utils/              # Utilidades y funciones auxiliares
+│       ├── __init__.py     # Inicialización del paquete de utilidades
+│       └── helpers.py      # Funciones auxiliares
+├── migrations/             # Archivos de migración de la base de datos
+│   └── ...                 # Archivos generados por Flask-Migrate
+├── tests/                  # Pruebas unitarias y funcionales
+│   ├── __init__.py         # Inicialización del paquete de pruebas
+│   ├── test_models.py      # Pruebas para los modelos
+│   ├── test_routes.py      # Pruebas para las rutas
+│   └── ...                 # Otras pruebas
+└── .vscode/                # Configuración específica de Visual Studio Code (opcional)
+    └── settings.json       # Configuración del entorno de desarrollo

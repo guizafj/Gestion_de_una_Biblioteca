@@ -7,6 +7,7 @@ from extensions import db
 import logging
 from src.models.models_prestamo import Prestamo
 from sqlalchemy import exc  # Importa las excepciones de SQLAlchemy
+from datetime import datetime, timedelta
 
 usuarios_bp = Blueprint('usuarios', __name__)
 
@@ -163,23 +164,51 @@ def crear_usuario():
 
     form = CrearUsuarioForm()
     if form.validate_on_submit():
+        # Verificar si el correo ya está registrado
+        if Usuario.query.filter_by(email=form.email.data).first():
+            flash('El correo electrónico ya está registrado. Por favor, usa otro.', 'danger')
+            return render_template('crear_usuario.html', form=form)
+
         try:
             nuevo_usuario = Usuario(
                 nombre=form.nombre.data,
                 email=form.email.data,
-                password=form.password.data,
                 rol=form.rol.data
             )
+            nuevo_usuario.set_password(form.contrasena.data) 
+            # Generar token de confirmación
+            token = nuevo_usuario.generar_token_confirmacion()
+            nuevo_usuario.token_confirmacion = token
+            nuevo_usuario.token_expiracion = datetime.utcnow() + timedelta(hours=24)  # Token válido por 24 horas
+
             db.session.add(nuevo_usuario)
             db.session.commit()
+
+            # Enviar correo de confirmación
+            try:
+                Usuario.enviar_correo(
+                    email=nuevo_usuario.email,
+                    token=token,
+                    ruta="auth.confirmar_email",  # Nombre completo del endpoint
+                    asunto="Confirmación de correo electrónico",
+                    mensaje="Para confirmar tu correo electrónico, haz clic en el siguiente enlace:",
+                    plantilla="confirmar_email.html"  # Nombre del template
+                )
+            except Exception as e:
+                logging.error(f"Error al enviar el correo de confirmación: {e}")
+                flash('No se pudo enviar el correo de confirmación. Por favor, intenta nuevamente.', 'danger')
+                return redirect(url_for('usuarios.gestion_usuarios'))
+
+            flash('Usuario registrado exitosamente, confirma tu correo electrónico.', 'success')
             flash(f"Usuario {nuevo_usuario.nombre} creado correctamente.", "success")
             return redirect(url_for('usuarios.gestion_usuarios'))
-        except exc.SQLAlchemyError as e:
+        except Exception as e:
             db.session.rollback()
-            logging.error(f"Error al crear usuario: {e}", exc_info=True)
-            flash("Ocurrió un error al crear el usuario. Intenta nuevamente.", "danger")
+            logging.error(f"Error al crear usuario: {e}")
+            flash('Ocurrió un error al crear el usuario. Por favor, intenta nuevamente.', 'danger')
 
-    return render_template('/crear_usuario.html', form=form, breadcrumbs=breadcrumbs)
+    return render_template('crear_usuario.html', form=form)
+
 
 @usuarios_bp.route('/auth/recuperar_cuenta', methods=['POST'])
 def recuperar_cuenta():
