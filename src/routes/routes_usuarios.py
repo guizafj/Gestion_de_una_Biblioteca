@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from modules.models_usuario import Usuario
-from modules.permissions import requiere_rol
+from src.forms.forms import CrearUsuarioForm
+from src.models.models_usuario import Usuario
+from src.permissions import requiere_rol
 from extensions import db
 import logging
-from modules.models_prestamo import Prestamo
+from src.models.models_prestamo import Prestamo
 from sqlalchemy import exc  # Importa las excepciones de SQLAlchemy
 
 usuarios_bp = Blueprint('usuarios', __name__)
@@ -115,6 +116,10 @@ def eliminar_usuario(usuario_id):
     try:
         usuario = Usuario.query.get_or_404(usuario_id)
 
+        # Manejar las reservas asociadas 
+        for reserva in usuario.reservas:
+            db.session.delete(reserva)
+
         # Evitar que un administrador se elimine a sí mismo
         if usuario.id == current_user.id:
             flash("No puedes eliminar tu propia cuenta.", "danger")
@@ -143,3 +148,51 @@ def eliminar_usuario(usuario_id):
         )
 
     return redirect(url_for('usuarios.gestion_usuarios'))
+
+@usuarios_bp.route('/crear_usuario', methods=['GET', 'POST'])
+@login_required
+@requiere_rol('admin')  # Solo accesible para administradores
+def crear_usuario():
+    """
+    Crea un nuevo usuario.
+    """
+    breadcrumbs = [
+        {'name': 'Inicio', 'url': url_for('generales.index')},
+        {'name': 'Crear Usuario', 'url': url_for('usuarios.crear_usuario')}
+    ]
+
+    form = CrearUsuarioForm()
+    if form.validate_on_submit():
+        try:
+            nuevo_usuario = Usuario(
+                nombre=form.nombre.data,
+                email=form.email.data,
+                password=form.password.data,
+                rol=form.rol.data
+            )
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+            flash(f"Usuario {nuevo_usuario.nombre} creado correctamente.", "success")
+            return redirect(url_for('usuarios.gestion_usuarios'))
+        except exc.SQLAlchemyError as e:
+            db.session.rollback()
+            logging.error(f"Error al crear usuario: {e}", exc_info=True)
+            flash("Ocurrió un error al crear el usuario. Intenta nuevamente.", "danger")
+
+    return render_template('/crear_usuario.html', form=form, breadcrumbs=breadcrumbs)
+
+@usuarios_bp.route('/auth/recuperar_cuenta', methods=['POST'])
+def recuperar_cuenta():
+    email = request.form.get('email')
+    usuario = Usuario.query.filter_by(email=email).first()
+    if usuario:
+        token = generar_token(usuario)
+        try:
+            usuario.enviar_correo('recuperar_cuenta.html', token=token)
+            flash('Correo de recuperación enviado', 'success')
+        except Exception as e:
+            app.logger.error(f"Error en recuperación de cuenta: {e}")
+            flash('Error al enviar el correo de recuperación', 'danger')
+    else:
+        flash('Usuario no encontrado', 'warning')
+    return redirect(url_for('auth.recuperar_cuenta'))

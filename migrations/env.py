@@ -4,6 +4,11 @@ from logging.config import fileConfig
 from flask import current_app
 
 from alembic import context
+from src.models.models_prestamo import Prestamo
+from src.models.models_libro import Libro
+from src.models.models_usuario import Usuario
+from src.models.models_reserva import Reserva
+from extensions import db
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -37,6 +42,7 @@ def get_engine_url():
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 config.set_main_option('sqlalchemy.url', get_engine_url())
+target_metadata = db.metadata
 target_db = current_app.extensions['migrate'].db
 
 # other values from the config, defined by the needs of env.py,

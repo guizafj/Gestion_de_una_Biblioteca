@@ -1,9 +1,9 @@
 """Modulo creado para la gestion de libros"""
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required
-from modules.models_libro import Libro
-from modules.forms import AgregarLibroForm, EditarLibroForm
-from modules.permissions import requiere_rol
+from src.models.models_libro import Libro
+from src.forms.forms import AgregarLibroForm, EditarLibroForm
+from src.permissions import requiere_rol
 from extensions import db
 import logging
 import os

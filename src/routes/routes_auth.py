@@ -1,12 +1,12 @@
 """Modulo definido para rutas de autenticación."""
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from modules.models_usuario import Usuario
-from modules.forms import RegistroForm, LoginForm
+from src.models.models_usuario import Usuario
+from src.forms.forms import RegistroForm, LoginForm
 from extensions import db  # Asegúrate de que `db` esté correctamente importado
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Crear el Blueprint para autenticación
 auth_bp = Blueprint('auth', __name__)
@@ -26,15 +26,38 @@ def registro():
         if Usuario.query.filter_by(email=form.email.data).first():
             flash('El correo electrónico ya está registrado.', 'warning')
             return redirect(url_for('auth.registro'))
+
         # Crear un nuevo usuario
         nuevo_usuario = Usuario(
             nombre=form.nombre.data,
             email=form.email.data,
             rol=form.rol.data
         )
-        nuevo_usuario.set_password(form.contrasena.data)
+        nuevo_usuario.set_password(form.contrasena.data) 
+
+        # Generar token de confirmación
+        token = nuevo_usuario.generar_token_confirmacion()
+        nuevo_usuario.token_confirmacion = token
+        nuevo_usuario.token_expiracion = datetime.utcnow() + timedelta(hours=24)  # Token válido por 24 horas
+
         db.session.add(nuevo_usuario)
         db.session.commit()
+
+        # Enviar correo de confirmación
+        try:
+            Usuario.enviar_correo(
+                email=nuevo_usuario.email,
+                token=token,
+                ruta="auth.confirmar_email",  # Nombre completo del endpoint
+                asunto="Confirmación de correo electrónico",
+                mensaje="Para confirmar tu correo electrónico, haz clic en el siguiente enlace:",
+                plantilla="confirmar_email.html"  # Nombre del template
+            )
+        except Exception as e:
+            logging.error(f"Error al enviar el correo de confirmación: {e}")
+            flash('No se pudo enviar el correo de confirmación. Por favor, intenta nuevamente.', 'danger')
+            return redirect(url_for('auth.registro'))
+
         flash('Usuario registrado exitosamente, confirma tu correo electrónico.', 'success')
         return redirect(url_for('auth.login'))
     return render_template('registro.html', form=form)
@@ -57,7 +80,7 @@ def confirmar_email(token):
             return render_template('confirmar_email.html', error='El enlace de confirmación ha expirado.', breadcrumbs=breadcrumbs)
 
         usuario.email_confirmado = True
-        usuario.token_confirmacion = None
+        usuario.token_confirmacion = None 
         usuario.token_expiracion = None
         db.session.commit()
 
@@ -81,6 +104,10 @@ def login():
     if form.validate_on_submit():
         usuario = Usuario.query.filter_by(email=form.email.data).first()
         if usuario:
+            if not usuario.email_confirmado:
+                flash('Debes confirmar tu correo electrónico antes de iniciar sesión.', 'warning')
+                return redirect(url_for('auth.login'))
+
             if usuario.check_password(form.contrasena.data):
                 login_user(usuario)
                 flash('Inicio de sesión exitoso.', 'success')

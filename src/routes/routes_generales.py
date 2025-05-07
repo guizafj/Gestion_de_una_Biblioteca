@@ -1,6 +1,6 @@
 """Modulo definido para las rutas generales."""
 from flask import Blueprint, send_from_directory, render_template, url_for
-from modules.models_libro import Libro  # Importar la clase Libro
+from src.models.models_libro import Libro  # Importar la clase Libro
 import os
 import logging
 

@@ -2,7 +2,7 @@ import re
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, ValidationError, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
-from modules.models_libro import Libro  # Importar el modelo Libro
+from src.models.models_libro import Libro  # Importar el modelo Libro
 
 
 class RegistroForm(FlaskForm):
@@ -185,3 +185,14 @@ class BuscarUsuarioForm(FlaskForm):
     """
     termino = StringField('Buscar', validators=[DataRequired(), Length(min=1, max=100)])
     submit = SubmitField('Buscar')
+
+class CrearUsuarioForm(FlaskForm):
+    """
+    Formulario para crear un nuevo usuario
+    """
+    nombre = StringField('Nombre', validators=[DataRequired(), Length(min=2, max=50)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    contrasena = PasswordField('Contraseña', validators=[DataRequired(), Length(min=8)])
+    confirmar_contrasena = PasswordField('Confirmar Contraseña', validators=[DataRequired(), EqualTo('contrasena', message='Las contraseñas deben coincidir.')])
+    rol = SelectField('Rol', choices=[('usuario', 'Usuario'), ('bibliotecario', 'Bibliotecario')], default='usuario')
+    submit = SubmitField('Crear Usuario')

@@ -7,11 +7,11 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import joinedload
 import logging
 from urllib.parse import urlencode
-from modules.models_prestamo import Prestamo
-from modules.models_libro import Libro
-from modules.models_usuario import Usuario
-from modules.permissions import requiere_rol
-from modules.models_reserva import Reserva
+from src.models.models_prestamo import Prestamo
+from src.models.models_libro import Libro
+from src.models.models_usuario import Usuario
+from src.permissions import requiere_rol
+from src.models.models_reserva import Reserva
 
 prestamos_bp = Blueprint('prestamos', __name__)
 
@@ -326,7 +326,7 @@ def gestionar_prestamos():
     if not current_user.es_bibliotecario() and not current_user.es_admin():
         flash('No tienes permiso para acceder a esta página.', 'danger')
         return redirect(url_for('generales.index'))
-
+ 
     # Obtener todos los préstamos activos (sin fecha de devolución)
     prestamos = Prestamo.query.options(joinedload(Prestamo.libro), joinedload(Prestamo.usuario)).filter(
         Prestamo.fecha_devolucion.is_(None)

@@ -1,6 +1,6 @@
 from main import create_app
 from extensions import db, mail
-from modules.models import Usuario
+from src.models.models_usuario import Usuario
 from flask_mail import Message
 from flask import url_for
 import logging
@@ -46,7 +46,7 @@ def crear_admin():
             token = admin.generar_token_confirmacion()
             
             # Generar enlace de confirmación
-            enlace = url_for('confirmar_email', token=token, _external=True)
+            enlace = url_for('auth.confirmar_email', token=token, _external=True)
             
             # Crear mensaje de correo
             msg = Message(

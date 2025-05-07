@@ -3,13 +3,14 @@ from datetime import datetime, timezone
 from datetime import datetime, timezone, timedelta  # Correct import
 from sqlalchemy import exc  # Import SQLAlchemy exceptions
 
-class Reserva(db.Model):
+class Reserva(db.Model): 
+    __tablename__ = 'reserva'
     """
     Representa una solicitud de reserva de un libro.
     """
     id = db.Column(db.Integer, primary_key=True)
-    libro_id = db.Column(db.Integer, db.ForeignKey('libro.id', ondelete='CASCADE'), nullable=False)  # Añadido ondelete
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id', ondelete='CASCADE'), nullable=False)  # Añadido ondelete
+    libro_id = db.Column(db.Integer, db.ForeignKey('libro.id', ondelete='CASCADE'), nullable=True)  # Añadido ondelete
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id', ondelete='CASCADE'), nullable=True)  # Añadido ondelete
     fecha_reserva = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     estado = db.Column(db.String(20), default='pendiente')  # Estados: pendiente, aprobada, rechazada
 
@@ -26,7 +27,7 @@ class Reserva(db.Model):
         """
         Valida si un libro puede ser reservado.
         """
-        from modules.models_libro import Libro  # Local import
+        from src.models_libro import Libro  # Local import
         libro = Libro.query.get(libro_id)
         if not libro:
             raise ValueError("El libro no existe.")

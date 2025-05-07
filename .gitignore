@@ -106,8 +106,8 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
-.venv
+.env/
+.venv/
 env/
 venv/
 ENV/
@@ -158,6 +158,7 @@ test/
 *.log
 *.tmp
 *.swp
+*.temp
 
 # macOS specific
 .DS_Store
@@ -167,3 +168,14 @@ Thumbs.db
 
 # Archivos relacionados con la migracion de la base de datos
 /migrations/
+migrations/
+migrations/**/*
+
+# Instancias de Flask
+instance/
+instance/**/*
+
+# Archivos de bases de datos locales
+*.db
+*.sqlite3
+*.sqlite3-journal

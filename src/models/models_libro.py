@@ -2,8 +2,9 @@ from extensions import db
 import re
 import logging
 
-
+ 
 class Libro(db.Model):
+    __tablename__ = 'libro'
     """
     Representa un libro en la biblioteca.
         Atributos:
@@ -174,7 +175,7 @@ class Libro(db.Model):
 
 
     @staticmethod
-    def validar_cantidad(cantidad):
+    def validar_cantidad(cantidad): 
         """
         Valida que la cantidad sea un número entero positivo.
         Args:

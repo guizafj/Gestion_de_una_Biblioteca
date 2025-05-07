@@ -3,19 +3,17 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from config import Config
 from extensions import db, mail
-from modules.auth import load_user
-from modules.models_prestamo import Prestamo
-from modules.models_libro import Libro
-from modules.models_usuario import Usuario
+from src.auth import load_user
+from src.models import Libro, Usuario, Prestamo, Reserva 
 from werkzeug.middleware.proxy_fix import ProxyFix
 import urllib.parse
 import logging
 import os
-from modules.routes_generales import generales_bp
-from modules.routes_auth import auth_bp
-from modules.routes_usuarios import usuarios_bp
-from modules.routes_libros import libros_bp
-from modules.routes_prestamos import prestamos_bp
+from src.routes.routes_generales import generales_bp
+from src.routes.routes_auth import auth_bp
+from src.routes.routes_usuarios import usuarios_bp
+from src.routes.routes_libros import libros_bp
+from src.routes.routes_prestamos import prestamos_bp
 
 
 def create_app(testing=False):

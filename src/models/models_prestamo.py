@@ -1,19 +1,25 @@
 from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
+import sqlalchemy as sa  # Importa sqlalchemy como sa
+from extensions import db  # Asegúrate de tener tu instancia de SQLAlchemy
 
-db = SQLAlchemy()  # Asegúrate de tener tu instancia de SQLAlchemy
-
-class Prestamo(db.Model):
+class Prestamo(db.Model): 
+    __tablename__ = 'prestamo'
     """
     Representa un préstamo de un libro.
     """
     id = db.Column(db.Integer, primary_key=True)
-    libro_id = db.Column(db.Integer, db.ForeignKey('libro.id', ondelete='SET NULL'), nullable=False)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id', ondelete='CASCADE'), nullable=False)
-    fecha_prestamo = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    fecha_devolucion = db.Column(db.DateTime, nullable=True)
+    libro_id = db.Column(db.Integer, db.ForeignKey('libro.id', ondelete='SET NULL'), nullable=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id', ondelete='CASCADE'), nullable=True)
+    fecha_prestamo = db.Column(
+    db.DateTime,
+    default=lambda: datetime.now(timezone.utc),  # Valor predeterminado en Python
+    server_default=sa.text('CURRENT_TIMESTAMP')  # Valor predeterminado en la base de datos
+    )
+    fecha_devolucion = db.Column(db.DateTime, nullable=True)  # Nueva columna
     estado = db.Column(db.String(20), default='activo')  # Estados: activo, devuelto, vencido
 
+       
     libro = db.relationship('Libro', backref=db.backref('prestamos', lazy=True))
     usuario = db.relationship('Usuario', backref=db.backref('prestamos', lazy=True))
 
@@ -103,3 +109,7 @@ class Prestamo(db.Model):
             dias_retraso = (datetime.now(timezone.utc) - self.calcular_fecha_vencimiento()).days
             return dias_retraso * tarifa_por_dia
         return 0
+    
+# Importar las clases relacionadas al final del archivo
+from src.models.models_libro import Libro
+from src.models.models_usuario import Usuario

@@ -16,8 +16,9 @@ class Config:
         f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}"
         f"@{os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}/{os.getenv('MYSQL_DB')}"
     )
+    # Desactiva el seguimiento de modificaciones para mejorar el rendimiento
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    DEBUG = os.getenv('FLASK_ENV') == 'development'
+    DEBUG = os.getenv('FLASK_ENV') == 'development' 
 
     # Clave secreta para la aplicación
     SECRET_KEY = os.getenv('SECRET_KEY', 'defaultsecretkey')
@@ -45,9 +46,6 @@ class Config:
 
     # Preferencia de esquema de URL (http o https)
     PREFERRED_URL_SCHEME = os.getenv('PREFERRED_URL_SCHEME', 'http')
-
-    # Configuración de SQLAlchemy
-    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Desactiva el seguimiento de modificaciones para mejorar el rendimiento
 
 
     # Configuración del logging

@@ -1,6 +1,6 @@
 from flask_login import UserMixin
 from datetime import datetime, timezone, timedelta
-import secrets
+import secrets 
 from extensions import db, mail
 from flask import url_for, current_app, render_template
 from flask_mail import Message
@@ -11,7 +11,8 @@ from sqlalchemy.orm import validates
 
 logging.basicConfig(filename='app.log', level=logging.INFO)
 
-class Usuario(UserMixin, db.Model):
+class Usuario(UserMixin, db.Model): 
+    __tablename__ = 'usuario'
     """
     Representa un usuario en la aplicación.
     """
@@ -109,7 +110,7 @@ class Usuario(UserMixin, db.Model):
             email (str): Dirección de correo del destinatario.
             token (str): Token único para el enlace.
             ruta (str): Nombre de la ruta Flask para generar el enlace.
-            asunto (str): Asunto del correo.
+            asunto (str): Asunto del correo. 
             mensaje (str): Mensaje adicional para el correo.
             plantilla (str): Nombre del archivo de plantilla HTML.
         """
@@ -131,7 +132,7 @@ class Usuario(UserMixin, db.Model):
                 msg.body = f"{mensaje}\n\nPara confirmar tu correo, visita: {enlace}"
                 
                 # Enviar el correo
-                mail.send(msg)
+                mail.send(msg )
                 logging.info(f"Correo enviado exitosamente a {email}")
         except Exception as e:
             error_msg = f"Error al enviar correo a {email}: {str(e)}"
@@ -210,6 +211,24 @@ class Usuario(UserMixin, db.Model):
             asunto="Restablecimiento de contraseña",
             mensaje="Para restablecer tu contraseña, haz clic en el siguiente enlace:",
             plantilla="restablecer_contrasena.html"
+        )
+
+    @classmethod
+    def recuperar_cuenta(cls, email):
+        """
+        Envía un correo electrónico para restablecer la contraseña del usuario.
+        """
+        usuario = cls.query.filter_by(email=email).first()
+        if not usuario:
+            raise ValueError("No se encontró un usuario con ese correo electrónico.")
+
+        Usuario.enviar_correo(
+            email=usuario.email,
+            token=usuario.generar_token_confirmacion(),
+            ruta="recuperar_cuenta",
+            asunto="Recuperación de cuenta",
+            mensaje="Para recuperar tu cuenta, haz clic en el siguiente enlace:",
+            plantilla="recuperar_cuenta.html"
         )
 
     def tiene_rol(self, rol):
