@@ -1,0 +1,39 @@
+[project]
+name = "Gestion_de_una_Biblioteca"
+version = "0.1.0"
+description = "Este proyecto es una aplicación que estoy empezando a construir para la gestión y administración de una biblioteca. Actualmente se encuentra en una fase inicial y está en pleno desarrollo."
+authors = [
+    {name = "FJavier", email = "contacto@dguiza.dev"},
+]
+dependencies = [
+    "Flask==2.3.2",
+    "Flask-SQLAlchemy==3.0.5",
+    "Flask-Login>=0.6.2",
+    "Flask-Mail==0.9.1",
+    "email-validator==2.0.0",
+    "Werkzeug>=2.3.3",
+    "python-dotenv==1.0.0",
+    "Flask-Bcrypt==1.0.1",
+    "flask-limiter==2.8.1",
+    "mysqlclient<3.0,>=2.1.0",
+    "Flask-WTF>=1.1.1",
+    "Flask-SeaSurf==2.0.0",
+    "pymysql==1.1.1",
+    "Flask-Migrate==4.0.4",
+    "Flask-DebugToolbar==0.13.1",
+    "gunicorn>=22.0.0",
+    "Flask-CORS==6.0.0",
+    "pytest==7.4.2",
+    "pytest-flask==1.2.0",
+]
+requires-python = ">=3.11,<3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.pdm]
+distribution = true

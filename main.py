@@ -26,6 +26,7 @@ from src.routes.routes_auth import auth_bp
 from src.routes.routes_usuarios import usuarios_bp
 from src.routes.routes_libros import libros_bp
 from src.routes.routes_prestamos import prestamos_bp
+import urllib.parse
 
 
 def create_app(testing=False):
