@@ -16,7 +16,7 @@ pymysql==1.1.1            # Cliente MySQL para Python
 # Dependencias opcionales
 Flask-Migrate==4.0.4       # Migraciones de la base de datos con Alembic
 Flask-DebugToolbar==0.13.1 # Herramienta de depuración durante el desarrollo
-gunicorn==20.1.0           # Servidor WSGI para producción
+gunicorn==22.0.0           # Servidor WSGI para producción
 Flask-CORS==4.0.0          # Manejo de CORS si es necesario
 
 # Dependencias para pruebas
