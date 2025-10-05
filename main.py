@@ -19,7 +19,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix  # Importar ProxyFix
 from config import Config
 from extensions import db, mail
 from src.auth import load_user
-from src.models import Usuario
+from src.models import models_usuario
 import logging
 from src.routes.routes_generales import generales_bp
 from src.routes.routes_auth import auth_bp
