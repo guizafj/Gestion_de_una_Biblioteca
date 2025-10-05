@@ -1,37 +1,50 @@
-/* Reset básico */
+/*
+Hoja de estilos principal para la aplicación de gestión de biblioteca.
+
+Incluye:
+- Reset básico para asegurar consistencia entre navegadores.
+- Media queries para diseño responsivo en diferentes tamaños de pantalla.
+- Estilos para header, navegación y cuerpo del sitio.
+
+Autor: Francisco Javier
+Fecha: 2025-05-17
+*/
+
+/* Reset básico: elimina márgenes y paddings por defecto y usa box-sizing border-box */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Media Queries */
+/* Media Queries para pantallas medianas (>=600px) */
 @media (min-width: 600px) {
     header {
-        text-align: left;
+        text-align: left; /* Alinea el header a la izquierda en pantallas medianas */
     }
 
     nav {
-        flex-direction: row;
-        justify-content: space-around;
+        flex-direction: row; /* Navegación horizontal */
+        justify-content: space-around; /* Espaciado uniforme entre enlaces */
     }
 
     nav a {
-        flex: 1;
-        text-align: center;
+        flex: 1; /* Cada enlace ocupa el mismo espacio */
+        text-align: center; /* Centra el texto de los enlaces */
     }
 }
 
+/* Media Queries para pantallas grandes (>=900px) */
 @media (min-width: 900px) {
     body {
-        padding: 2rem;
+        padding: 2rem; /* Añade padding al cuerpo para mayor espacio */
     }
 
     header h1 {
-        font-size: 2rem;
+        font-size: 2rem; /* Aumenta el tamaño del título principal */
     }
 
     nav a {
-        padding: 0.75rem;
+        padding: 0.75rem; /* Más espacio alrededor de los enlaces de navegación */
     }
 }

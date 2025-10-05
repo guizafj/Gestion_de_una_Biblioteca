@@ -23,7 +23,7 @@
                                 <a href="{{ url_for('libros.editar_libro', libro_id=libro.id) }}" class="btn btn-primary btn-sm">Editar <i class="bi bi-pencil"></i></a>
                                     <!-- Formulario para eliminar -->
                                 <form method="POST" action="{{ url_for('libros.eliminar_libro', libro_id=libro.id) }}" style="display:inline;">
-                                 <button type="submit" class="btn btn-danger btn-sm btn-eliminar" data-titulo="{{ libro.titulo }}">Eliminar <i class="bi bi-trash"></i></button>
+                                <button type="submit" class="btn btn-danger btn-sm btn-eliminar" data-titulo="{{ libro.titulo }}">Eliminar <i class="bi bi-trash"></i></button>
                                 </form>
                                 <a href="{{ url_for('prestamos.prestar',libro_id=libro.id, reserva_id=None) }}" class="btn btn-primary btn-sm ">Prestar Libro <i class="bi bi-gear-wide-connected"></i></a>
                             </div>

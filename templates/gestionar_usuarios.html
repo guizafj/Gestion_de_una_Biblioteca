@@ -3,7 +3,7 @@
 {% block content %}
 <h2>Gestión de Usuarios</h2>
 <nav class="navbar bg-body-tertiary">
-  <div class="container-fluid">
+<div class="container-fluid">
         <form method="get" action="{{ url_for('usuarios.gestion_usuarios') }}" class="mb-3 d-flex ">
             <div class="input-group">
                 <input type="text" name="termino" class="form-control" placeholder="Buscar usuarios por nombre o correo" value="{{ termino }}">

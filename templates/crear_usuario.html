@@ -2,7 +2,7 @@
 {% block content %}
     <h1>Crear Usuario</h1>
     <form method="POST" action="{{ url_for('usuarios.crear_usuario') }}">
-         {{ form.hidden_tag() }}
+        {{ form.hidden_tag() }}
         <div class="form-group">
             {{ form.nombre.label }}
             {{ form.nombre(class="form-control") }}
