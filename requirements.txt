@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 alembic==1.16.1
 bcrypt==4.3.0
 blinker==1.9.0
@@ -41,3 +42,29 @@ typing_extensions==4.14.0
 Werkzeug==3.1.3
 wrapt==1.17.2
 WTForms==3.2.1
+=======
+# Dependencias principales
+Flask==2.3.2               # Framework web ligero
+Flask-SQLAlchemy==3.0.5    # Integración de SQLAlchemy con Flask
+Flask-Login>=0.6.2         # Manejo de autenticación y sesiones de usuarios
+Flask-Mail==0.9.1          # Para enviar correos electrónicos
+email-validator==2.0.0     # Para validar direcciones de correo electrónico
+Werkzeug>=2.3.3            # Funciones internas de Flask
+python-dotenv==1.0.0       # Para cargar variables de entorno desde .env
+Flask-Bcrypt==1.0.1        # Hashing seguro de contraseñas
+flask-limiter==2.8.1       # Limita el número de solicitudes por usuario
+mysqlclient>=2.1.0,<3.0    # Cliente MySQL para Python
+Flask-WTF>=1.1.1
+Flask-SeaSurf==2.0.0      # Protección CSRF
+pymysql==1.1.1            # Cliente MySQL para Python
+
+# Dependencias opcionales
+Flask-Migrate==4.0.4       # Migraciones de la base de datos con Alembic
+Flask-DebugToolbar==0.13.1 # Herramienta de depuración durante el desarrollo
+gunicorn==20.1.0           # Servidor WSGI para producción
+Flask-CORS==6.0.0          # Manejo de CORS si es necesario
+
+# Dependencias para pruebas
+pytest==7.4.2              # Pruebas unitarias
+pytest-flask==1.2.0        # Integración de pytest con Flask
+>>>>>>> 79d9bd7bd7b3c7964be7d93a437f8ae603a9113a
