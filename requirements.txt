@@ -1,48 +1,3 @@
-<<<<<<< HEAD
-alembic==1.16.1
-bcrypt==4.3.0
-blinker==1.9.0
-click==8.2.1
-commonmark==0.9.1
-Deprecated==1.2.18
-dnspython==2.7.0
-email-validator==2.0.0
-Flask==2.3.2
-Flask-Bcrypt==1.0.1
-Flask-Cors==4.0.0
-Flask-DebugToolbar==0.13.1
-Flask-Limiter==2.8.1
-Flask-Login==0.6.3
-Flask-Mail==0.9.1
-Flask-Migrate==4.0.4
-Flask-SeaSurf==2.0.0
-Flask-SQLAlchemy==3.0.5
-Flask-WTF==1.2.2
-greenlet==3.2.3
-gunicorn==20.1.0
-idna==3.10
-iniconfig==2.1.0
-itsdangerous==2.2.0
-Jinja2==3.1.6
-limits==5.2.0
-Mako==1.3.10
-MarkupSafe==3.0.2
-mysqlclient==2.2.7
-packaging==25.0
-pluggy==1.6.0
-Pygments==2.19.1
-PyMySQL==1.1.1
-pytest==7.4.2
-pytest-flask==1.2.0
-python-dotenv==1.0.0
-rich==12.6.0
-setuptools==80.9.0
-SQLAlchemy==2.0.41
-typing_extensions==4.14.0
-Werkzeug==3.1.3
-wrapt==1.17.2
-WTForms==3.2.1
-=======
 # Dependencias principales
 Flask==2.3.2               # Framework web ligero
 Flask-SQLAlchemy==3.0.5    # Integración de SQLAlchemy con Flask
@@ -62,9 +17,8 @@ pymysql==1.1.1            # Cliente MySQL para Python
 Flask-Migrate==4.0.4       # Migraciones de la base de datos con Alembic
 Flask-DebugToolbar==0.13.1 # Herramienta de depuración durante el desarrollo
 gunicorn==20.1.0           # Servidor WSGI para producción
-Flask-CORS==6.0.0          # Manejo de CORS si es necesario
+Flask-CORS==4.0.0          # Manejo de CORS si es necesario
 
 # Dependencias para pruebas
 pytest==7.4.2              # Pruebas unitarias
 pytest-flask==1.2.0        # Integración de pytest con Flask
->>>>>>> 79d9bd7bd7b3c7964be7d93a437f8ae603a9113a
