@@ -41,6 +41,6 @@ python-dotenv==1.0.0
 rich==12.6.0
 sqlalchemy==2.0.43
 typing-extensions==4.15.0
-werkzeug==3.1.5
+werkzeug==3.1.6
 wrapt==1.17.3
 wtforms==3.2.1
