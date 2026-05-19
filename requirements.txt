@@ -35,7 +35,7 @@ packaging==25.0
 pluggy==1.6.0
 pygments==2.19.2
 pymysql==1.1.1
-pytest==7.4.2
+pytest==9.0.3
 pytest-flask==1.2.0
 python-dotenv==1.0.0
 rich==12.6.0
