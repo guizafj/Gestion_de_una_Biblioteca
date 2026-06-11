@@ -327,11 +327,11 @@ def importar_datos():
     if request.method == "POST":
         if "file" not in request.files:
             flash("No se seleccionó ningún archivo.", "danger")
-            return redirect(request.url)
+            return redirect(url_for("libros.importar_datos"))
         file = request.files["file"]
         if file.filename == "":
             flash("No se seleccionó ningún archivo.", "danger")
-            return redirect(request.url)
+            return redirect(url_for("libros.importar_datos"))
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             filepath = os.path.join(UPLOAD_FOLDER, filename)
