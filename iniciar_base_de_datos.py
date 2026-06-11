@@ -23,7 +23,7 @@ def init_db(testing=False):
     Inicializa la base de datos de la aplicación.
 
     Args:
-        testing (bool): Si es True, usa configuración de prueba. 
+        testing (bool): Si es True, usa configuración de prueba.
                     Si es False, usa configuración de producción con MariaDB.
 
     - Crea la aplicación Flask con la configuración especificada.
@@ -39,19 +39,26 @@ def init_db(testing=False):
         with app.app_context():
             # Verificar conexión a la base de datos
             from sqlalchemy import text
+
             with db.engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
-            logger.info(f"✅ Conexión exitosa a: {app.config['SQLALCHEMY_DATABASE_URI']}")
-            
+            logger.info(
+                f"✅ Conexión exitosa a: {app.config['SQLALCHEMY_DATABASE_URI']}"
+            )
+
             # Crear todas las tablas
             db.create_all()
-            logger.info("✅ Base de datos inicializada correctamente - Todas las tablas creadas")
-            
+            logger.info(
+                "✅ Base de datos inicializada correctamente - Todas las tablas creadas"
+            )
+
             # Mostrar tablas creadas
             inspector = db.inspect(db.engine)
             tables = inspector.get_table_names()
-            logger.info(f"📋 Tablas disponibles: {', '.join(tables) if tables else 'Ninguna'}")
-            
+            logger.info(
+                f"📋 Tablas disponibles: {', '.join(tables) if tables else 'Ninguna'}"
+            )
+
     except Exception as e:
         logger.error(f"❌ Error al inicializar la base de datos: {e}")
         raise
@@ -59,10 +66,10 @@ def init_db(testing=False):
 
 if __name__ == "__main__":
     import sys
-    
+
     # Permitir elegir entre modo producción y testing
     testing_mode = len(sys.argv) > 1 and sys.argv[1] == "--testing"
-    
+
     if testing_mode:
         logger.info("🧪 Inicializando base de datos en modo TESTING")
         init_db(testing=True)

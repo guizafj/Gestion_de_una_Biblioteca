@@ -57,7 +57,7 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 
       2. **Roles de Usuario**:
         - Se añadió un campo `rol` al modelo `Usuario` para diferenciar entre bibliotecarios y usuarios regulares.
-        - Se implementaron restricciones de acceso basadas en roles.  
+        - Se implementaron restricciones de acceso basadas en roles.
 
       3. **Gestión de Libros**:
          - Se añadieron rutas y plantillas para editar y eliminar libros.
@@ -65,27 +65,27 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 
       4. **Préstamos y Devoluciones**:
         - Se implementó un sistema de préstamos y devoluciones con historial.
-        - Se añadieron recordatorios para devoluciones pendientes. 
-      
+        - Se añadieron recordatorios para devoluciones pendientes.
+
       5. **Búsqueda Avanzada**:
         - Se permitió buscar libros por título, autor o ISBN.
 
       6. **Estructura Modular**:
-        - El proyecto sigue una estructura modular clara, facilitando futuras mejoras. 
+        - El proyecto sigue una estructura modular clara, facilitando futuras mejoras.
 
 ## 🎯 Objetivo general
 
-  Aplicación web para gestionar una biblioteca utilizando Flask, SQLAlchemy y autenticación de usuarios. 
+  Aplicación web para gestionar una biblioteca utilizando Flask, SQLAlchemy y autenticación de usuarios.
   Incluye funcionalidades como registro de usuarios, confirmación de correo electrónico, gestión de libros, préstamos, devoluciones y más.
 
-  ## Mejoras Futuras 
+  ## Mejoras Futuras
 
     Implementar notificaciones automáticas para recordatorios de devolución.
     Añadir pruebas unitarias para mejorar la calidad del código.
     Se esta migrando actualmente a MySQL la base de datos
     Agregar la variable de cantidad en el modelo de libro
     Se cambiara la forma de prestar libros, el usuario registrado podra reservarlo, mas no crear un prestamos, ya que eso es una función del bibliotecario
-     
+
 
 ## 🤝 Contribuciones
 
@@ -96,7 +96,7 @@ Este proyecto es una aplicación que estoy empezando a construir para la **gesti
 1. Clona el repositorio:
    ```bash
    git clone https://github.com/guizafj/Gestion_de_una_Biblioteca.git
-   cd Gestion_y_Administracion_de_una_Biblioteca  
+   cd Gestion_y_Administracion_de_una_Biblioteca
 
 ## 📦 Estructura del proyecto (en progreso)
 

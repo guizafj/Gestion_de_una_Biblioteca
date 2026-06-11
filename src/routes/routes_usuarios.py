@@ -105,15 +105,6 @@ def cambiar_rol(usuario_id):
     Returns:
         str: Redirige tras cambiar el rol.
     """
-    breadcrumbs = [
-        {"name": "Inicio", "url": url_for("generales.index")},
-        {"name": "Gestión de Usuarios", "url": url_for("usuarios.gestion_usuarios")},
-        {
-            "name": "Cambiar Rol",
-            "url": url_for("usuarios.cambiar_rol", usuario_id=usuario_id),
-        },
-    ]
-
     try:
         usuario = Usuario.query.get_or_404(usuario_id)
         nuevo_rol = request.form.get("rol")
@@ -150,15 +141,6 @@ def eliminar_usuario(usuario_id):
     Returns:
         str: Redirige tras eliminar el usuario.
     """
-    breadcrumbs = [
-        {"name": "Inicio", "url": url_for("generales.index")},
-        {"name": "Gestión de Usuarios", "url": url_for("usuarios.gestion_usuarios")},
-        {
-            "name": "Eliminar Usuario",
-            "url": url_for("usuarios.eliminar_usuario", usuario_id=usuario_id),
-        },
-    ]
-
     try:
         usuario = Usuario.query.get_or_404(usuario_id)
 
@@ -221,7 +203,9 @@ def crear_usuario():
                 "El correo electrónico ya está registrado. Por favor, usa otro.",
                 "danger",
             )
-            return render_template("crear_usuario.html", form=form)
+            return render_template(
+                "crear_usuario.html", form=form, breadcrumbs=breadcrumbs
+            )
 
         try:
             nuevo_usuario = Usuario(
@@ -270,30 +254,4 @@ def crear_usuario():
                 "danger",
             )
 
-    return render_template("crear_usuario.html", form=form)
-
-
-@usuarios_bp.route("/auth/recuperar_cuenta", methods=["POST"])
-def recuperar_cuenta():
-    """
-    Permite solicitar la recuperación de cuenta por correo electrónico.
-
-    Args:
-        Ninguno directamente (usa request.form).
-
-    Returns:
-        str: Redirige tras intentar enviar el correo de recuperación.
-    """
-    email = request.form.get("email")
-    usuario = Usuario.query.filter_by(email=email).first()
-    if usuario:
-        token = generar_token(usuario)
-        try:
-            usuario.enviar_correo("recuperar_cuenta.html", token=token)
-            flash("Correo de recuperación enviado", "success")
-        except Exception as e:
-            app.logger.error(f"Error en recuperación de cuenta: {e}")
-            flash("Error al enviar el correo de recuperación", "danger")
-    else:
-        flash("Usuario no encontrado", "warning")
-    return redirect(url_for("auth.recuperar_cuenta"))
+    return render_template("crear_usuario.html", form=form, breadcrumbs=breadcrumbs)

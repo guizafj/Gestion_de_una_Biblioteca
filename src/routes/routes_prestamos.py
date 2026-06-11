@@ -15,7 +15,6 @@ from extensions import db
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import joinedload
 import logging
-from urllib.parse import urlencode
 from src.models.models_prestamo import Prestamo
 from src.models.models_libro import Libro
 from src.models.models_usuario import Usuario
@@ -362,18 +361,6 @@ def aprobar_reserva(reserva_id):
         flash("El libro ya no está disponible.", "warning")
         return redirect(url_for("prestamos.reservas_pendientes"))
 
-    breadcrumbs = [
-        {"name": "Inicio", "url": url_for("generales.index")},
-        {
-            "name": "Gestión de Préstamos",
-            "url": url_for("prestamos.gestionar_prestamos"),
-        },
-        {
-            "name": "Aprobar Reserva",
-            "url": url_for("prestamos.aprobar_reserva", reserva_id=reserva_id),
-        },
-    ]
-
     try:
         prestamo = Prestamo(libro_id=libro.id, usuario_id=reserva.usuario_id)
         libro.esta_disponible = False  # Marcar como no disponible
@@ -411,18 +398,6 @@ def rechazar_reserva(reserva_id):
         return redirect(url_for("generales.index"))
 
     reserva = Reserva.query.get_or_404(reserva_id)
-
-    breadcrumbs = [
-        {"name": "Inicio", "url": url_for("generales.index")},
-        {
-            "name": "Gestión de Préstamos",
-            "url": url_for("prestamos.gestionar_prestamos"),
-        },
-        {
-            "name": "Rechazar Reserva",
-            "url": url_for("prestamos.rechazar_reserva", reserva_id=reserva_id),
-        },
-    ]
 
     try:
         reserva.estado = "rechazada"

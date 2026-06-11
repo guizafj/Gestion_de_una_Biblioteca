@@ -18,7 +18,7 @@
                         {% endif %}
                     </div>
                     <div>
-                        {% if current_user.is_authenticated and libro.esta_disponible %}                            
+                        {% if current_user.is_authenticated and libro.esta_disponible %}
                             <a href="{{ url_for('prestamos.reservar', libro_id=libro.id) }}" class="btn btn-primary btn-sm">Reservar Libro <i class="bi bi-bookmark-plus"></i></a>
                         {% endif %}
                     </div>

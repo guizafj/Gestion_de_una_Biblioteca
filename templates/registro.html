@@ -5,7 +5,7 @@
 
     <form id="registro-form" method="POST" action="{{ url_for('auth.registro') }}">
         {{ form.hidden_tag() }}
-        
+
         <!-- Campo Nombre -->
         <div class="form-group input-container">
             <label for="nombre">Nombre</label>
@@ -14,7 +14,7 @@
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         </div>
-        
+
         <!-- Campo Email -->
         <div class="form-group input-container">
             <label for="email">Email</label>
@@ -23,7 +23,7 @@
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         </div>
-        
+
         <!-- Campo Contraseña -->
         <div class="form-group input-container">
             <label for="contrasena">Contraseña</label>
@@ -32,7 +32,7 @@
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         </div>
-        
+
         <!-- Campo Confirmar Contraseña -->
         <div class="form-group input-container">
             <label for="confirmar_contrasena">Confirmar Contraseña</label>
@@ -41,7 +41,7 @@
                 <small class="text-danger">{{ error }}</small>
             {% endfor %}
         </div>
-        
+
         <!-- Botón de Envío -->
         <button type="submit" class="btn btn-primary mt-3">Registrarse <i class="bi bi-plugin"></i></button>
     </form>

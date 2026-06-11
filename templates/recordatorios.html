@@ -2,12 +2,12 @@
 
 {% block content %}
     <h2>Recordatorios de Devolución Pendiente</h2>
-    
+
     <!-- Lista de Recordatorios -->
     <ul class="list-group mt-3">
         {% for prestamo in prestamos_pendientes %}
             <li class="list-group-item">
-                <strong>{{ prestamo.libro.titulo }}</strong> 
+                <strong>{{ prestamo.libro.titulo }}</strong>
                 (Préstamo desde {{ prestamo.fecha_prestamo.strftime('%d/%m/%Y') }})
             </li>
         {% endfor %}

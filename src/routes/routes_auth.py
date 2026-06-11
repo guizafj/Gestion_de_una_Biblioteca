@@ -9,8 +9,19 @@ Autor: Francisco Javier
 Fecha: 2025-05-17
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_user, logout_user, login_required  # Eliminamos current_user porque no se usa
+from flask import (
+    Blueprint,
+    render_template,
+    redirect,
+    url_for,
+    flash,
+    request,
+)
+from flask_login import (
+    login_user,
+    logout_user,
+    login_required,
+)  # Eliminamos current_user porque no se usa
 from src.models.models_usuario import Usuario
 from src.forms.forms import RegistroForm, LoginForm
 from extensions import db
@@ -80,7 +91,7 @@ def registro():
             "success",
         )
         return redirect(url_for("auth.login"))
-    return render_template("registro.html", form=form)
+    return render_template("registro.html", form=form, breadcrumbs=breadcrumbs)
 
 
 @auth_bp.route("/confirmar_email/<token>")
@@ -226,7 +237,7 @@ def recuperar_cuenta():
             logging.error(f"Error en recuperación de cuenta: {e}")
             flash("Ocurrió un error. Por favor, intenta nuevamente.", "danger")
 
-    return render_template("recuperar_cuenta.html")
+    return render_template("recuperar_cuenta.html", breadcrumbs=breadcrumbs)
 
 
 @auth_bp.route("/restablecer_contrasena/<token>", methods=["GET", "POST"])
@@ -279,4 +290,6 @@ def restablecer_contrasena(token):
                 "danger",
             )
 
-    return render_template("restablecer_contrasena.html", token=token)
+    return render_template(
+        "restablecer_contrasena.html", token=token, breadcrumbs=breadcrumbs
+    )

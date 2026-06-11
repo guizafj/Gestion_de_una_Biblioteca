@@ -204,5 +204,3 @@ class Prestamo(db.Model):
 
 
 # Mover los imports al inicio del archivo para evitar E402
-from src.models.models_libro import Libro
-from src.models.models_usuario import Usuario

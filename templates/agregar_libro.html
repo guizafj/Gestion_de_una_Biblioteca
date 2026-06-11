@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block content %} 
+{% block content %}
     <h2>Agregar Libro</h2>
     <form id="agregar-libro-form" method="POST" action="{{ url_for('libros.agregar_libro') }}">
         {{ form.hidden_tag() }}
