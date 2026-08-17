@@ -174,3 +174,4 @@ instance/**/*
 
 # Documentation
 .docs/
+AGENTS.md
