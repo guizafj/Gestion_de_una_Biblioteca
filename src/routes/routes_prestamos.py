@@ -51,7 +51,7 @@ def prestar(libro_id, reserva_id=None):
             )
             return redirect(url_for("prestamos.reservas_pendientes"))
 
-    if not libro.esta_disponible():
+    if not libro.esta_disponible:
         flash("No hay ejemplares disponibles para préstamo.", "warning")
         return redirect(
             url_for("prestamos.reservas_pendientes" if reserva else "generales.index")
@@ -269,7 +269,7 @@ def reservar(libro_id):
     """
     libro = Libro.query.get_or_404(libro_id)
 
-    if not libro.esta_disponible():
+    if not libro.esta_disponible:
         flash("El libro no está disponible para reserva.", "warning")
         return redirect(url_for("generales.index"))
 
@@ -357,13 +357,13 @@ def aprobar_reserva(reserva_id):
     reserva = Reserva.query.get_or_404(reserva_id)
     libro = reserva.libro
 
-    if not libro.esta_disponible():
+    if not libro.esta_disponible:
         flash("El libro ya no está disponible.", "warning")
         return redirect(url_for("prestamos.reservas_pendientes"))
 
     try:
         prestamo = Prestamo(libro_id=libro.id, usuario_id=reserva.usuario_id)
-        libro.esta_disponible = False  # Marcar como no disponible
+        libro.reducir_cantidad()
         reserva.estado = "aprobada"
 
         db.session.add(prestamo)

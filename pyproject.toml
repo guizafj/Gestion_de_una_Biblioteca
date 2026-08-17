@@ -15,7 +15,6 @@ dependencies = [
     "python-dotenv==1.2.2",
     "Flask-Bcrypt==1.0.1",
     "flask-limiter==2.8.1",
-    "mysqlclient<3.0,>=2.1.0",
     "Flask-WTF>=1.1.1",
     "Flask-SeaSurf==2.0.0",
     "pymysql==1.1.1",

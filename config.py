@@ -57,8 +57,8 @@ class Config:
     if not SECRET_KEY:
         raise ValueError("La variable SECRET_KEY no está configurada.")
 
-    # Nombre del servidor (ajustar según despliegue)
-    SERVER_NAME = "127.0.0.1:5000"  # Reemplaza con tu dominio o dirección IP
+    # Nombre del servidor (desde variable de entorno o None para auto-detección)
+    SERVER_NAME = os.getenv("SERVER_NAME")
 
     # Configuración de Flask-Mail
     MAIL_SERVER = os.getenv("MAIL_SERVER", "localhost")

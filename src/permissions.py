@@ -46,7 +46,7 @@ def requiere_rol(*roles):
             # Verifica si el usuario está autenticado
             if not current_user.is_authenticated:
                 flash("Debe iniciar sesión para acceder.", "warning")
-                return redirect(url_for("login"))
+                return redirect(url_for("auth.login"))
 
             # Verifica si el usuario tiene alguno de los roles requeridos
             if not any(current_user.tiene_rol(rol) for rol in roles):
@@ -54,7 +54,7 @@ def requiere_rol(*roles):
                     f"Intento de acceso no autorizado: {current_user.email}"
                 )
                 flash("No tiene permisos para acceder a esta página.", "danger")
-                return redirect(url_for("index"))
+                return redirect(url_for("generales.index"))
 
             return f(*args, **kwargs)
 

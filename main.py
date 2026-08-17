@@ -15,7 +15,8 @@ Fecha: 2025-05-17
 from flask import Flask, url_for
 from flask_login import LoginManager
 from flask_migrate import Migrate
-from werkzeug.middleware.proxy_fix import ProxyFix  # Importar ProxyFix
+from sqlalchemy import text
+from werkzeug.middleware.proxy_fix import ProxyFix
 from config import Config
 from extensions import db, mail
 from src.auth import load_user
@@ -114,12 +115,12 @@ def initialize_extensions(app):
 app = create_app()
 
 if __name__ == "__main__":
-    # Ejecutar la aplicación Flask en modo desarrollo
-    app.run(host="0.0.0.0", port=5000, debug=True)
-    # Probar la conexión a la base de datos al iniciar
     with app.app_context():
         try:
-            db.engine.execute("SELECT 1")
+            with db.engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
             print("Conexión a la base de datos exitosa.")
         except Exception as e:
             print(f"Error al conectar a la base de datos: {e}")
+
+    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -1,0 +1,53 @@
+services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DB:-biblioteca}
+    ports:
+      - "3308:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_APP: main.py
+      SECRET_KEY: ${SECRET_KEY:-changeme_in_production}
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DB: ${MYSQL_DB:-biblioteca}
+      MYSQL_HOST: db
+      MYSQL_PORT: "3306"
+      DEBUG: "False"
+      SESSION_COOKIE_SECURE: "False"
+      SESSION_COOKIE_HTTPONLY: "True"
+      SESSION_COOKIE_SAMESITE: Lax
+      PREFERRED_URL_SCHEME: http
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Esperando a que MariaDB este listo...'
+        until python -c \"import pymysql; pymysql.connect(host='db', user='root', password='${MYSQL_ROOT_PASSWORD:-rootpassword}', database='${MYSQL_DB:-biblioteca}')\" 2>/dev/null; do
+          sleep 2
+        done
+        echo 'MariaDB listo. Aplicando migraciones...'
+        flask db upgrade
+        echo 'Migraciones aplicadas. Iniciando servidor...'
+        gunicorn --bind 0.0.0.0:5000 --workers 4 main:app
+      "
+
+volumes:
+  mariadb_data:
