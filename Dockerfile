@@ -2,10 +2,20 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY pyproject.toml README.md ./
-RUN pip install --no-cache-dir .
+# Instalar PDM
+RUN pip install --no-cache-dir pdm
 
+# Copiar solo archivos necesarios para instalar dependencias
+COPY pyproject.toml README.md ./
+
+# Instalar dependencias (sin grupo dev)
+RUN pdm install --prod --no-self --no-editable
+
+# Copiar el resto de la aplicación
 COPY . .
+
+# Instalar la aplicación herself
+RUN pdm install --prod --no-editable
 
 EXPOSE 5000
 

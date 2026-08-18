@@ -1,147 +1,166 @@
-# 📚 Sistema de Gestión y Administración de Biblioteca
+# Sistema de Gestión y Administración de Biblioteca
 
-Este proyecto es una aplicación que estoy empezando a construir para la **gestión y administración de una biblioteca**. Actualmente se encuentra en una fase inicial y está en pleno desarrollo.
+Aplicación web para la gestión y administración de bibliotecas, desarrollada con Flask y MySQL/MariaDB. Proyecto en desarrollo activo, orientado a ser donado a instituciones públicas.
 
-## 🚀 Características previstas
+## Características
 
-## Funcionalidades
+### Gestión de Libros
+- CRUD completo (agregar, editar, eliminar)
+- Validación de ISBN-10/ISBN-13 con checksum
+- Búsqueda por título, autor, ISBN, género o editorial
+- Importación de libros desde CSV
+- Agrupación por autor, género y título
+- Control de cantidad de ejemplares
 
-- **Gestión de Libros**:
+### Préstamos y Devoluciones
+- Sistema de préstamos con control de cantidad
+- Reserva de libros por usuarios (pendiente/aprobada/rechazada)
+- Aprobación/rechazo de reservas por bibliotecario
+- Expiración automática de reservas (7 días)
+- Historial personal y general de préstamos
+- Recordatorios de devoluciones pendientes
+- Libros más prestados
 
-  - Agregar, editar y eliminar libros.
-  - Validar ISBN único (10 o 13 dígitos).
-  - Validar títulos únicos.
-  - Agrupar libros por autor.
+### Autenticación y Seguridad
+- Registro con confirmación de correo electrónico
+- Login/logout con Flask-Login
+- Roles: usuario, bibliotecario, administrador
+- Control de acceso basado en roles
+- Bloqueo de cuenta tras 5 intentos fallidos
+- Recuperación de contraseña vía email
 
-- **Préstamos y Devoluciones**:
+### Infraestructura
+- Docker Compose (app + MariaDB 10.11)
+- Migraciones con Flask-Migrate (Alembic)
+- Tests unitarios, de rutas e integración (150 tests)
+- Pre-commit hooks (ruff lint + format)
 
-  - Prestar y devolver libros.
-  - Historial de préstamos.
-  - Recordatorios de devoluciones pendientes.
+## Tecnologías
 
-- **Autenticación de Usuarios**:
-
-  - Registro de usuarios con confirmación de correo electrónico.
-  - Inicio de sesión seguro.
-  - Roles de usuario: "bibliotecario" y "usuario".
-
-- **Búsqueda Avanzada**:
-
-  - Buscar libros por título, autor o ISBN.
-
-- **Escalabilidad**:
-
-- Estructura modular para facilitar futuras mejoras.
-- Gestión de inventario de libros (altas, bajas y modificaciones)
-- Control de préstamos y devoluciones de libros
-- Administración de usuarios (lectores, administradores)
-- Historial de transacciones y reportes básicos
-
-## 🛠️ Tecnologías planificadas
-
-- **Python** (backend)
-- **SQLite** o **PostgreSQL** (base de datos)
-- **Flask** (para desarrollo y despliegue en servidores)
-- **Visual Studio Code** (entorno de desarrollo)
-
-## ✅ Estado actual del proyecto
-
-  ⚠️ En construcción - Fase inicial
-
-    Estoy comenzando la creación de la estructura base del proyecto y las primeras funcionalidades.
-    ### ** Resumen de Mejoras Implementadas**
-
-      1. **Confirmación de Correo Electrónico**:
-        - Se implementó un sistema de confirmación de correo usando tokens únicos generados con `secrets`.
-        - Los usuarios deben confirmar su correo antes de iniciar sesión.
-
-      2. **Roles de Usuario**:
-        - Se añadió un campo `rol` al modelo `Usuario` para diferenciar entre bibliotecarios y usuarios regulares.
-        - Se implementaron restricciones de acceso basadas en roles.
-
-      3. **Gestión de Libros**:
-         - Se añadieron rutas y plantillas para editar y eliminar libros.
-        - Se validó el ISBN (10 o 13 dígitos) y se verificó que los títulos sean únicos.
-
-      4. **Préstamos y Devoluciones**:
-        - Se implementó un sistema de préstamos y devoluciones con historial.
-        - Se añadieron recordatorios para devoluciones pendientes.
-
-      5. **Búsqueda Avanzada**:
-        - Se permitió buscar libros por título, autor o ISBN.
-
-      6. **Estructura Modular**:
-        - El proyecto sigue una estructura modular clara, facilitando futuras mejoras.
-
-## 🎯 Objetivo general
-
-  Aplicación web para gestionar una biblioteca utilizando Flask, SQLAlchemy y autenticación de usuarios.
-  Incluye funcionalidades como registro de usuarios, confirmación de correo electrónico, gestión de libros, préstamos, devoluciones y más.
-
-  ## Mejoras Futuras
-
-    Implementar notificaciones automáticas para recordatorios de devolución.
-    Añadir pruebas unitarias para mejorar la calidad del código.
-    Se esta migrando actualmente a MySQL la base de datos
-    Agregar la variable de cantidad en el modelo de libro
-    Se cambiara la forma de prestar libros, el usuario registrado podra reservarlo, mas no crear un prestamos, ya que eso es una función del bibliotecario
-
-
-## 🤝 Contribuciones
-
-  Como el proyecto está en sus primeras etapas, cualquier sugerencia o feedback es bienvenido. En el futuro estaré abierto a colaboraciones externas.
+| Componente | Tecnología |
+|---|---|
+| Backend | Python 3.11, Flask 3.1.3 |
+| ORM | SQLAlchemy + Flask-Migrate |
+| Base de datos | MySQL/MariaDB 10.11 (producción), SQLite (tests) |
+| Autenticación | Flask-Login |
+| Email | Flask-Mail |
+| Formularios | Flask-WTF |
+| Paquete | Gunicorn (producción), PDM (desarrollo) |
+| Contenedores | Docker, Docker Compose |
 
 ## Instalación
 
-1. Clona el repositorio:
-   ```bash
-   git clone https://github.com/guizafj/Gestion_de_una_Biblioteca.git
-   cd Gestion_y_Administracion_de_una_Biblioteca
+### Desarrollo local
 
-## 📦 Estructura del proyecto (en progreso)
+```bash
+# Clonar el repositorio
+git clone https://github.com/guizafj/Gestion_de_una_Biblioteca.git
+cd Gestion_de_una_Biblioteca
 
-```plaintext
+# Crear entorno virtual e instalar dependencias
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+pdm install
+
+# Configurar variables de entorno (editar .env con tus credenciales)
+cp .env.example .env
+
+# Inicializar la base de datos
+python iniciar_base_de_datos.py
+
+# Crear usuario administrador
+python crear_admin.py
+
+# Ejecutar la aplicación
+python main.py  # http://localhost:5000
+```
+
+### Docker
+
+```bash
+# Construir y ejecutar
+docker-compose up --build
+
+# La app estará en http://localhost:5000
+# MariaDB estará en localhost:3308
+```
+
+### Tests
+
+```bash
+python -m unittest discover tests  # 150 tests
+```
+
+## Estructura del proyecto
+
+```
 Gestion_de_una_Biblioteca/
-├── main.py                  # Archivo principal de la aplicación Flask
-├── config.py               # Configuración de la aplicación (opcional)
-├── requirements.txt        # Dependencias del proyecto
-├── README.md               # Documentación del proyecto
-├── .gitignore              # Archivos y carpetas a ignorar por Git
-├── config.py               # Configuración específica de la instancia
-├── instance/               # Configuración específica de la instancia (por ejemplo, base de datos local)
-│   └── bd                  # Base de datos - resultado de las migraciones
-├── src/                    # Código fuente del proyecto
-│   ├── __init__.py         # Inicialización del paquete Flask
-│   ├── models/             # Modelos de la base de datos
-│   │   ├── __init__.py     # Inicialización del paquete de modelos
-│   │   └── models_usuario.py # Modelos relacionados con usuarios
-│   ├── routes/             # Rutas de la aplicación
-│   │   ├── __init__.py     # Inicialización del paquete de rutas
-│   │   ├── routes_libros.py # Rutas relacionadas con libros
-│   │   └── routes_usuarios.py # Rutas relacionadas con usuarios
-│   ├── forms/              # Formularios de Flask-WTF
-│   │   ├── __init__.py     # Inicialización del paquete de formularios
-│   │   └── forms_usuario.py # Formularios relacionados con usuarios
-│   ├── templates/          # Plantillas HTML
-│   │   ├── base.html       # Plantilla base
-│   │   ├── login.html      # Página de inicio de sesión
-│   │   ├── registro.html   # Página de registro de usuarios
-│   │   ├── gestion_libros.html # Página para gestionar libros
-│   │   └── ...             # Otras plantillas
-│   ├── static/             # Archivos estáticos (CSS, JS, imágenes)
-│   │   ├── css/
-│   │   │   └── styles.css  # Hoja de estilos CSS
-│   │   └── js/
-│   │       └── scripts.js  # Archivo JavaScript
-│   └── utils/              # Utilidades y funciones auxiliares
-│       ├── __init__.py     # Inicialización del paquete de utilidades
-│       └── helpers.py      # Funciones auxiliares
-├── migrations/             # Archivos de migración de la base de datos
-│   └── ...                 # Archivos generados por Flask-Migrate
-├── tests/                  # Pruebas unitarias y funcionales
-│   ├── __init__.py         # Inicialización del paquete de pruebas
-│   ├── test_models.py      # Pruebas para los modelos
-│   ├── test_routes.py      # Pruebas para las rutas
-│   └── ...                 # Otras pruebas
-└── .vscode/                # Configuración específica de Visual Studio Code (opcional)
-    └── settings.json       # Configuración del entorno de desarrollo
+├── main.py                     # App factory, blueprints, filtros
+├── config.py                   # Configuración (MySQL, mail, cookies)
+├── extensions.py               # Instancias db y mail
+├── docker-compose.yml          # Orquestación Docker
+├── Dockerfile                  # Imagen de la app
+├── pyproject.toml              # Dependencias (PDM)
+├── .env                        # Variables de entorno (no committear)
+├── src/
+│   ├── models/                 # Modelos SQLAlchemy
+│   │   ├── models_libro.py     # Libro (CRUD, validaciones)
+│   │   ├── models_usuario.py   # Usuario (auth, roles, tokens)
+│   │   ├── models_prestamo.py  # Préstamo (ciclo de vida)
+│   │   └── models_reserva.py   # Reserva (flujo de aprobación)
+│   ├── routes/                 # Blueprints
+│   │   ├── routes_generales.py # Index, favicon, errores
+│   │   ├── routes_auth.py      # Login, registro, recuperación
+│   │   ├── routes_usuarios.py  # Gestión de usuarios (admin)
+│   │   ├── routes_libros.py    # CRUD libros, búsqueda, importación
+│   │   └── routes_prestamos.py # Préstamos, reservas, historial
+│   ├── forms/forms.py          # WTForms
+│   ├── auth.py                 # Flask-Login load_user
+│   └── permissions.py          # Decoradores de roles
+├── templates/                  # Jinja2 (29 templates + 3 emails)
+├── static/                     # CSS, JS, favicon
+├── migrations/                 # Alembic (3 migraciones)
+├── tests/                      # 150 tests
+│   ├── test_models.py          # 79 tests unitarios
+│   ├── test_routes.py          # 52 tests de rutas
+│   ├── test_flujo.py           # 12 tests de integración
+│   └── test_app.py             # 7 tests de smoke
+└── .docs/                      # Documentación interna
+```
+
+## Roles y permisos
+
+| Rol | Permisos |
+|---|---|
+| `usuario` | Buscar libros, reservar, ver historial personal |
+| `bibliotecario` | + Prestar/devolver, gestionar libros, ver recordatorios |
+| `admin` | + Gestionar usuarios, importar CSV, historial general |
+
+## Estado actual
+
+### Implementado
+- CRUD de libros con validaciones
+- Sistema de usuarios con roles y autenticación
+- Préstamos y devoluciones con control de inventario
+- Reservas con flujo de aprobación
+- Búsqueda avanzada e importación CSV
+- 150 tests (unitarios, rutas, integración)
+- Docker Compose con MariaDB
+- Migraciones de base de datos
+
+### Pendiente
+- Notificaciones automáticas de devolución
+- Marcar préstamos vencidos (cron job)
+- Sistema de penalizaciones (modelo existe, sin UI)
+- Rate limiting (`flask-limiter` instalado, sin inicializar)
+- CSRF protection (`flask-seasurf` instalado, sin inicializar)
+- Debug toolbar (instalado, sin usar)
+- Template `notificacion_general.html` (referenciado, no existe)
+
+## Licencia
+
+MIT
+
+## Autor
+
+Francisco Javier - [contacto@dguiza.dev](mailto:contacto@dguiza.dev)
