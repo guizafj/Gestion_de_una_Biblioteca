@@ -174,4 +174,5 @@ instance/**/*
 
 # Documentation
 .docs/
-AGENTS.md
+*.md
+!README.md
